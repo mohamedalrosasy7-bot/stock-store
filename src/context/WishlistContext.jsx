@@ -7,18 +7,22 @@ const WishlistContext = createContext(null);
 export function WishlistProvider({ children }) {
   const [storedIds, setStoredIds] = useLocalStorage('mv-wishlist', []);
   // Validate against the live catalog so admin-created products can be saved too.
-  const { products } = useAdmin();
+  const { products, catalogLoaded } = useAdmin();
   const validIds = useMemo(() => new Set(products.map((p) => p.id)), [products]);
 
-  // Ignore (and clean up) ids of products that no longer exist in the catalog.
+  // Keep saved ids until the live catalog is available for validation.
   const ids = useMemo(
-    () => (Array.isArray(storedIds) ? storedIds.filter((id) => validIds.has(id)) : []),
-    [storedIds, validIds]
+    () => {
+      const savedIds = Array.isArray(storedIds) ? storedIds : [];
+      return catalogLoaded ? savedIds.filter((id) => validIds.has(id)) : savedIds;
+    },
+    [storedIds, validIds, catalogLoaded]
   );
 
   useEffect(() => {
+    if (!catalogLoaded) return;
     if (ids.length !== (Array.isArray(storedIds) ? storedIds.length : 0)) setStoredIds(ids);
-  }, [ids, storedIds, setStoredIds]);
+  }, [catalogLoaded, ids, storedIds, setStoredIds]);
 
   const toggle = useCallback(
     (id) => {

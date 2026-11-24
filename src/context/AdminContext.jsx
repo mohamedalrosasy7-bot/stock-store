@@ -67,6 +67,7 @@ export function AdminProvider({ children }) {
   const [statusMsg, setStatusMsg] = useState('');
   const [hiddenSeasons, setHiddenSeasons] = useState({});
   const [loaded, setLoaded] = useState(false);
+  const [catalogLoaded, setCatalogLoaded] = useState(false);
 
   const refreshStoreData = useCallback(async () => {
     const [catalog, catData, adsData, settingsData] = await Promise.all([
@@ -76,6 +77,7 @@ export function AdminProvider({ children }) {
       api('/api/settings').catch(() => ({ settings: null })),
     ]);
     setProducts(Array.isArray(catalog.products) ? catalog.products : []);
+    setCatalogLoaded(true);
     if (catData.categories?.length) setCategories(catData.categories.map(normalizeCategory));
     if (adsData && Array.isArray(adsData.banners)) {
       setShopAds({ enabled: adsData.enabled !== false, banners: adsData.banners });
@@ -312,6 +314,7 @@ export function AdminProvider({ children }) {
     login,
     logout,
     loaded,
+    catalogLoaded,
     categories,
     addCategory,
     updateCategory,
