@@ -21,10 +21,10 @@ export const STORE = {
 
 export const money = (n) => `${Math.round(n).toLocaleString('en-US')} ${STORE.currency}`;
 
-// Cloudinary image pipeline knobs (server-side secrets stay in .dev.vars /
-// wrangler secrets; only the public cloud name is needed in the browser).
+// Cloudinary image pipeline knobs. Uploads use the public Cloud Name in the
+// storefront; the upload preset stays in the authenticated Pages Function.
 export const IMAGES = {
-  cloudName: import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || '',
+  cloudName: import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'mpbvtc5j',
   // True when uploads should go through /api/upload -> Cloudinary instead of
   // storing base64 data URLs in D1.
   get useCloudinary() {

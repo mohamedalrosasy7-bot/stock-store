@@ -466,6 +466,7 @@ export default {
     noAdImagesHint: 'Add one or more images to start the shop page slider.',
     onlyImages: 'Only image files can be uploaded.',
     couldNotRead: 'Could not read the selected images. Please try again.',
+    imageUploadFailed: 'Could not upload the image. Check the image service configuration and try again.',
     // Orders page
     ordersSubtitle: 'Customer orders received from the store',
     viewImage: 'View image at full size',

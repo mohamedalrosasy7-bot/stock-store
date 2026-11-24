@@ -1,6 +1,5 @@
 // Tiny fetch client for the /api/* Functions. Same-origin (Cloudflare Pages),
 // so cookies ride along automatically.
-
 const inflight = new Map();
 
 export async function api(path, { method = 'GET', body, signal } = {}) {
@@ -39,8 +38,8 @@ export async function api(path, { method = 'GET', body, signal } = {}) {
   return promise;
 }
 
-// Multipart upload (images) — used by the admin image pickers. Returns the
-// stored URL (Cloudinary when configured, otherwise the function is disabled).
+// Multipart upload through the authenticated Pages Function. Cloudinary's
+// unsigned preset is applied server-side; no API secret reaches the browser.
 export async function uploadImage(file) {
   const form = new FormData();
   form.append('file', file);

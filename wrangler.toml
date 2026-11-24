@@ -12,4 +12,4 @@ database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
 
 [vars]
 # Public, safe to commit. Secrets live in Cloudflare dashboard / .dev.vars.
-CLOUDINARY_CLOUD_NAME = "REPLACE_WITH_YOUR_CLOUD_NAME"
+CLOUDINARY_CLOUD_NAME = "mpbvtc5j"

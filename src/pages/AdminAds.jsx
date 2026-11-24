@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAdmin } from '../context/AdminContext';
 import { useLang } from '../context/LangContext';
+import { isAllowedImage, uploadStoreImage } from '../lib/images';
 import { ArrowIcon, EyeIcon, EyeOffIcon, ImageIcon, PlusIcon, TrashIcon } from '../components/Icons';
 
 export default function AdminAds() {
@@ -31,35 +32,21 @@ export default function AdminAds() {
     setUploadError('');
     if (!files.length) return;
 
-    const validFiles = files.filter((file) => file.type.startsWith('image/'));
+    const validFiles = files.filter(isAllowedImage);
     if (validFiles.length !== files.length) {
       setUploadError('admin.onlyImages');
     }
     if (!validFiles.length) return;
 
-    try {
-      const banners = await Promise.all(validFiles.map((file, index) => new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          if (typeof reader.result !== 'string') {
-            reject(new Error(t('admin.couldNotRead')));
-            return;
-          }
-          resolve({
-            id: `ad-${Date.now()}-${index}-${Math.random().toString(36).slice(2, 8)}`,
-            name: file.name,
-            src: reader.result,
-            active: true,
-          });
-        };
-        reader.onerror = () => reject(new Error(t('admin.couldNotRead')));
-        reader.readAsDataURL(file);
-      })));
-      addAdBanners(banners);
-    } catch (error) {
-      console.error('Unable to read advertisement images.', error);
-      setUploadError('admin.couldNotRead');
-    }
+    const results = await Promise.allSettled(validFiles.map(async (file, index) => ({
+      id: `ad-${Date.now()}-${index}-${Math.random().toString(36).slice(2, 8)}`,
+      name: file.name,
+      src: await uploadStoreImage(file),
+      active: true,
+    })));
+    const banners = results.filter((result) => result.status === 'fulfilled').map((result) => result.value);
+    if (banners.length) addAdBanners(banners);
+    if (results.some((result) => result.status === 'rejected')) setUploadError('admin.imageUploadFailed');
   };
 
   const activeCount = shopAds.banners.filter((banner) => banner.active !== false).length;

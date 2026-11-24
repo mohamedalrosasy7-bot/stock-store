@@ -1,6 +1,6 @@
 # STOCK STORE
 
-React storefront built with Vite and Cloudflare Pages Functions. Product, category, ad, settings, order, and newsletter data are stored in Cloudflare D1. Product images are uploaded through the Functions API to Cloudinary.
+React storefront built with Vite and Cloudflare Pages Functions. Product, category, ad, settings, order, and newsletter data are stored in Cloudflare D1. Admin images are uploaded through the authenticated Functions API to Cloudinary using an unsigned upload preset.
 
 ## Local development
 
@@ -18,14 +18,14 @@ npx wrangler pages dev dist --compatibility-date=2024-09-23
 
 ## Cloudflare backend setup
 
-1. Create a D1 database named `stock-store-db`, then put its ID in `wrangler.toml` under the `DB` binding. Replace the Cloudinary cloud-name placeholder in the same file.
+1. Create a D1 database named `stock-store-db`, then put its ID in `wrangler.toml` under the `DB` binding. The public Cloudinary cloud name is configured in that file.
 2. Apply `schema.sql` to the database with `npx wrangler d1 execute stock-store-db --remote --file=schema.sql`.
 3. Create a Cloudflare Pages project named `stock-store`. GitHub Pages serves static files only and cannot run the Functions in `functions/`.
-4. In Cloudflare Pages, bind D1 as `DB`. Add the runtime secrets `SESSION_SECRET`, `CLOUDINARY_API_KEY`, and `CLOUDINARY_API_SECRET`.
-5. Add GitHub repository secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`; add the repository variable `VITE_CLOUDINARY_CLOUD_NAME` so the browser can generate optimized Cloudinary URLs.
+4. In Cloudflare Pages, bind D1 as `DB`. Add runtime secrets `SESSION_SECRET` and `CLOUDINARY_UPLOAD_PRESET`. `CLOUDINARY_API_KEY` and `CLOUDINARY_API_SECRET` are only needed by the signed image-delete endpoint.
+5. Add GitHub repository secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`. The storefront's Cloudinary cloud name can be overridden with the optional variable `VITE_CLOUDINARY_CLOUD_NAME`.
 6. After the Pages project, D1 binding, and secrets are ready, set the GitHub repository variable `CLOUDFLARE_DEPLOY_ENABLED` to `true`. The workflow stays paused until this final switch.
 
-The Cloudflare account, D1 database ID, and Cloudinary credentials still need to be supplied before production orders, admin changes, and image uploads can persist. The GitHub Actions deployment workflow has been prepared but remains paused until account setup is complete. A fresh D1 database has no products; add them through the admin catalog or perform a deliberate catalog import.
+The Cloudflare account, D1 database ID, `SESSION_SECRET`, and `CLOUDINARY_UPLOAD_PRESET` runtime secret still need to be configured before production orders, admin changes, and image uploads can work. Cloudinary API credentials are additionally needed for deleting uploaded assets. The GitHub Actions deployment workflow has been prepared but remains paused until account setup is complete. A fresh D1 database has no products; add them through the admin catalog or perform a deliberate catalog import.
 
 ## Store configuration
 
@@ -36,5 +36,6 @@ Edit `src/data/products.js` for the fallback catalog. The remote D1 catalog is t
 ## Notes
 
 - Admin sessions use signed, HTTP-only cookies. Set `SESSION_SECRET` to a random value of at least 32 characters.
-- Never commit `.dev.vars` or Cloudinary credentials. `.dev.vars.example` contains placeholders only.
+- Never commit `.dev.vars` or Cloudinary API credentials. The example file contains placeholders for secrets and the public unsigned upload settings.
+- Treat the unsigned upload preset name as sensitive. Restrict allowed formats and upload behavior in Cloudinary; use signed uploads if you need stronger upload authorization.
 - The application is a client-rendered SPA. Product photos in the fallback catalog are linked from Unsplash.

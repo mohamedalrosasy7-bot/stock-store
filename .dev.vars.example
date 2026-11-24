@@ -1,5 +1,9 @@
 # Local secrets for `wrangler pages dev` (never commit the real one).
 SESSION_SECRET=replace-with-a-random-secret-at-least-32-characters
-CLOUDINARY_CLOUD_NAME=REPLACE_WITH_YOUR_CLOUD_NAME
+# Public unsigned upload settings.
+CLOUDINARY_CLOUD_NAME=mpbvtc5j
+# Treat the unsigned preset as sensitive; keep its real value out of Git.
+CLOUDINARY_UPLOAD_PRESET=REPLACE_WITH_YOUR_UNSIGNED_UPLOAD_PRESET
+# Only used by the signed image-delete endpoint.
 CLOUDINARY_API_KEY=REPLACE_WITH_YOUR_API_KEY
 CLOUDINARY_API_SECRET=REPLACE_WITH_YOUR_API_SECRET

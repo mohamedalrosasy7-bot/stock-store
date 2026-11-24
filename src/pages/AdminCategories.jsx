@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useAdmin } from '../context/AdminContext';
 import { useLang } from '../context/LangContext';
 import { IMAGES, getCategoryName } from '../data/products';
+import { isAllowedImage, uploadStoreImage } from '../lib/images';
 import { ImageIcon, PlusIcon, TrashIcon } from '../components/Icons';
 
 const EMPTY_CATEGORY = { label: '', labelAr: '', image: '' };
@@ -48,12 +49,12 @@ export default function AdminCategories() {
     }));
   };
 
-  const readImage = (event, onRead) => {
+  const readImage = async (event, onRead) => {
     const file = event.target.files?.[0];
     event.target.value = '';
     setUploadError('');
     if (!file) return;
-    if (!file.type.startsWith('image/')) {
+    if (!isAllowedImage(file)) {
       setUploadError('admin.onlyImages');
       return;
     }
@@ -62,16 +63,11 @@ export default function AdminCategories() {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result !== 'string') {
-        setUploadError('admin.couldNotRead');
-        return;
-      }
-      onRead(reader.result);
-    };
-    reader.onerror = () => setUploadError('admin.couldNotRead');
-    reader.readAsDataURL(file);
+    try {
+      onRead(await uploadStoreImage(file));
+    } catch {
+      setUploadError('admin.imageUploadFailed');
+    }
   };
 
   const saveNewCategory = (event) => {

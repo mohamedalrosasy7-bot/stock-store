@@ -30,10 +30,6 @@ jobs:
             echo "::error::Set the production D1 database ID in wrangler.toml before enabling deployment."
             exit 1
           fi
-          if grep -q 'REPLACE_WITH_YOUR_CLOUD_NAME' wrangler.toml; then
-            echo "::error::Set the Cloudinary cloud name in wrangler.toml before enabling deployment."
-            exit 1
-          fi
           if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
             echo "::error::Set CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID in GitHub repository secrets."
             exit 1
@@ -43,8 +39,6 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       - run: npm ci
       - run: npm run build
-        env:
-          VITE_CLOUDINARY_CLOUD_NAME: ${{ vars.VITE_CLOUDINARY_CLOUD_NAME }}
       - name: Deploy Pages and Functions
         run: npx wrangler pages deploy dist --project-name stock-store --branch main
         env:
