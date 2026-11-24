@@ -30,7 +30,7 @@ export default function Footer() {
             <h4>{t('footer.contact')}</h4>
             {STORE.stores.map((store) => (
               <span key={store.key} className="footer-address">
-                {t(`footer.stores.${store.key}`)}: {store.address}
+                {t(`footer.stores.${store.key}`)}: <bdi dir="rtl">المحمودية، البحيرة - {store.address}</bdi>
               </span>
             ))}
             <a href={`tel:${STORE.phone.replace(/\s/g, '')}`}>{STORE.phone}</a>

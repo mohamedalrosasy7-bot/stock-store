@@ -712,6 +712,8 @@ p { margin: 0 0 1rem; }
   .form-grid, .success-cols { grid-template-columns: 1fr; }
   .span-2 { grid-column: auto; }
   .footer-grid { grid-template-columns: 1fr; }
+  .footer-about { margin-inline: auto; text-align: center; }
+  .footer-grid > div > span.footer-address { font-size: clamp(0.62rem, 3.2vw, 0.78rem); white-space: nowrap; }
   .topbar { font-size: 0.62rem; }
   .hero { background-color: #26231f; }
   .card-body .btn { font-size: 0.68rem; padding-inline: 0.6rem; }
