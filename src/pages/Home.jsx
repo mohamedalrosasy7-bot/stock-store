@@ -149,7 +149,7 @@ export default function Home() {
             <h2>{t('home.whatCustomersSay')}</h2>
           </div>
         </div>
-        <div className="reviews">
+        <div className="reviews" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
           {reviews.map((r) => (
             <figure key={r.name} className="review">
               <blockquote>“{r.text}”</blockquote>
