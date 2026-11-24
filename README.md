@@ -16,16 +16,17 @@ npx wrangler pages dev dist --compatibility-date=2024-09-23
 
 `npm run dev` starts Vite only; it does not run the `/api/*` Pages Functions. Use `wrangler pages dev` when working on the API or admin persistence. Configure a local D1 database binding in `wrangler.toml` before using the Functions locally.
 
-## Cloudflare backend setup
+## Production deployment status
 
-1. Create a D1 database named `stock-store-db`, then put its ID in `wrangler.toml` under the `DB` binding. The public Cloudinary cloud name is configured in that file.
-2. Apply `schema.sql` to the database with `npx wrangler d1 execute stock-store-db --remote --file=schema.sql`.
-3. Create a Cloudflare Pages project named `stock-store`. GitHub Pages serves static files only and cannot run the Functions in `functions/`.
-4. In Cloudflare Pages, bind D1 as `DB`. Add runtime secrets `SESSION_SECRET` and `CLOUDINARY_UPLOAD_PRESET`. `CLOUDINARY_API_KEY` and `CLOUDINARY_API_SECRET` are only needed by the signed image-delete endpoint.
-5. Add GitHub repository secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`. The storefront's Cloudinary cloud name can be overridden with the optional variable `VITE_CLOUDINARY_CLOUD_NAME`.
-6. After the Pages project, D1 binding, and secrets are ready, set the GitHub repository variable `CLOUDFLARE_DEPLOY_ENABLED` to `true`. The workflow stays paused until this final switch.
+The production storefront is deployed at <https://stock-store.pages.dev> using Cloudflare Pages Functions and the remote D1 database `stock-store-db`. The database ID and `DB` binding are recorded in `wrangler.toml`; `schema.sql` is applied. The database currently contains the sample catalog from `seed.json` (16 products and 5 categories). These are starter/test records and should be reviewed or replaced before treating the store as live inventory.
 
-The Cloudflare account, D1 database ID, `SESSION_SECRET`, and `CLOUDINARY_UPLOAD_PRESET` runtime secret still need to be configured before production orders, admin changes, and image uploads can work. Cloudinary API credentials are additionally needed for deleting uploaded assets. The GitHub Actions deployment workflow has been prepared but remains paused until account setup is complete. A fresh D1 database has no products; add them through the admin catalog or perform a deliberate catalog import.
+Cloudflare Pages production secrets are configured for `SESSION_SECRET`, `CLOUDINARY_UPLOAD_PRESET`, `CLOUDINARY_API_KEY`, and `CLOUDINARY_API_SECRET`. The public Cloudinary cloud name is in `wrangler.toml`. Uploads use the unsigned preset through the authenticated Pages Function; image deletion uses the signed Cloudinary API.
+
+No admin user has been created. Admin sign-in and protected admin actions will remain unavailable until the owner creates the first admin account and password. The initial admin setup is intentionally kept out of the sample catalog seed script.
+
+The site was deployed directly with Wrangler. To enable future GitHub Actions deployments, add `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` as repository secrets, then set the repository variable `CLOUDFLARE_DEPLOY_ENABLED` to `true`. The workflow stays paused until that variable is enabled. The storefront's Cloudinary cloud name can be overridden with the optional variable `VITE_CLOUDINARY_CLOUD_NAME`.
+
+For a new environment, create a D1 database and a Pages project named `stock-store`, set the D1 binding as `DB`, apply `schema.sql`, then add the Pages secrets listed above. Do not run `scripts/seed.mjs` without explicitly setting admin credentials: that legacy script creates an admin account. Use `node scripts/seed-catalog.mjs --remote` only when intentionally loading the sample catalog.
 
 ## Store configuration
 
