@@ -1,0 +1,706 @@
+{
+  "products": [
+    {
+      "id": "test-tapered-chino-pants",
+      "name": "TEST - Tapered Chino Pants",
+      "category": "pants",
+      "price": 1450,
+      "salePrice": null,
+      "colors": [
+        {
+          "name": "Beige",
+          "hex": "#d9c9ae"
+        },
+        {
+          "name": "Navy",
+          "hex": "#1d2a44"
+        }
+      ],
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "images": [
+        "https://images.unsplash.com/photo-1542272604-787c3835535d?auto=format&fit=crop&w=900&h=1125&q=80",
+        "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=900&h=1125&q=80",
+        "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=900&h=1125&q=80"
+      ],
+      "description": "Test catalog item for checking category browsing and product details.",
+      "details": [
+        "Versatile everyday style",
+        "Available in selected sizes and colors",
+        "Easy to pair with casual and smart-casual outfits"
+      ],
+      "season": "both",
+      "featured": false,
+      "isNew": true,
+      "bestSeller": false,
+      "rating": 4.3,
+      "reviews": 24
+    },
+    {
+      "id": "test-relaxed-everyday-pants",
+      "name": "TEST - Relaxed Everyday Pants",
+      "category": "pants",
+      "price": 1750,
+      "salePrice": 1575,
+      "colors": [
+        {
+          "name": "Olive",
+          "hex": "#6b6b45"
+        },
+        {
+          "name": "Black",
+          "hex": "#141414"
+        }
+      ],
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "images": [
+        "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=900&h=1125&q=80",
+        "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=900&h=1125&q=80",
+        "https://images.unsplash.com/photo-1542272604-787c3835535d?auto=format&fit=crop&w=900&h=1125&q=80"
+      ],
+      "description": "Test catalog item for checking discounted pricing and product filters.",
+      "details": [
+        "Versatile everyday style",
+        "Available in selected sizes and colors",
+        "Easy to pair with casual and smart-casual outfits"
+      ],
+      "season": "both",
+      "featured": false,
+      "isNew": false,
+      "bestSeller": true,
+      "rating": 4.6,
+      "reviews": 61
+    },
+    {
+      "id": "test-classic-fleece-hoodie",
+      "name": "TEST - Classic Fleece Hoodie",
+      "category": "hoodies",
+      "price": 1850,
+      "salePrice": null,
+      "colors": [
+        {
+          "name": "Grey",
+          "hex": "#8c8c8c"
+        },
+        {
+          "name": "Black",
+          "hex": "#141414"
+        }
+      ],
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "images": [
+        "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=900&h=1125&q=80",
+        "https://images.unsplash.com/photo-1618354691373-d851c5c3a990?auto=format&fit=crop&w=900&h=1125&q=80",
+        "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=900&h=1125&q=80"
+      ],
+      "description": "Test catalog item for checking category browsing and product details.",
+      "details": [
+        "Comfortable everyday layer",
+        "Available in selected sizes and colors",
+        "Designed for casual styling"
+      ],
+      "season": "both",
+      "featured": false,
+      "isNew": true,
+      "bestSeller": false,
+      "rating": 4.9,
+      "reviews": 98
+    },
+    {
+      "id": "test-zip-up-hoodie",
+      "name": "TEST - Zip-Up Hoodie",
+      "category": "hoodies",
+      "price": 2200,
+      "salePrice": 1980,
+      "colors": [
+        {
+          "name": "Navy",
+          "hex": "#1d2a44"
+        },
+        {
+          "name": "Grey",
+          "hex": "#8c8c8c"
+        }
+      ],
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "images": [
+        "https://images.unsplash.com/photo-1618354691373-d851c5c3a990?auto=format&fit=crop&w=900&h=1125&q=80",
+        "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=900&h=1125&q=80",
+        "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=900&h=1125&q=80"
+      ],
+      "description": "Test catalog item for checking discounted pricing and product filters.",
+      "details": [
+        "Comfortable everyday layer",
+        "Available in selected sizes and colors",
+        "Designed for casual styling"
+      ],
+      "season": "both",
+      "featured": false,
+      "isNew": false,
+      "bestSeller": true,
+      "rating": 4.5,
+      "reviews": 135
+    },
+    {
+      "id": "test-lightweight-utility-jacket",
+      "name": "TEST - Lightweight Utility Jacket",
+      "category": "jackets",
+      "price": 2600,
+      "salePrice": null,
+      "colors": [
+        {
+          "name": "Olive",
+          "hex": "#6b6b45"
+        },
+        {
+          "name": "Black",
+          "hex": "#141414"
+        }
+      ],
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "images": [
+        "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=900&h=1125&q=80",
+        "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=900&h=1125&q=80",
+        "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=900&h=1125&q=80"
+      ],
+      "description": "Test catalog item for checking category browsing and product details.",
+      "details": [
+        "Versatile outer layer for everyday wear",
+        "Available in selected sizes and colors",
+        "Easy to style across seasons"
+      ],
+      "season": "both",
+      "featured": true,
+      "isNew": false,
+      "bestSeller": false,
+      "rating": 4.8,
+      "reviews": 172
+    },
+    {
+      "id": "test-classic-denim-jacket",
+      "name": "TEST - Classic Denim Jacket",
+      "category": "jackets",
+      "price": 3100,
+      "salePrice": 2790,
+      "colors": [
+        {
+          "name": "Indigo",
+          "hex": "#2f3f63"
+        },
+        {
+          "name": "Black",
+          "hex": "#141414"
+        }
+      ],
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "images": [
+        "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=900&h=1125&q=80",
+        "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=900&h=1125&q=80",
+        "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=900&h=1125&q=80"
+      ],
+      "description": "Test catalog item for checking discounted pricing and product filters.",
+      "details": [
+        "Versatile outer layer for everyday wear",
+        "Available in selected sizes and colors",
+        "Easy to style across seasons"
+      ],
+      "season": "both",
+      "featured": false,
+      "isNew": true,
+      "bestSeller": false,
+      "rating": 4.4,
+      "reviews": 29
+    },
+    {
+      "id": "test-cotton-pullover",
+      "name": "TEST - Cotton Pullover",
+      "category": "pullover",
+      "price": 1700,
+      "salePrice": null,
+      "colors": [
+        {
+          "name": "Black",
+          "hex": "#141414"
+        },
+        {
+          "name": "White",
+          "hex": "#f6f4ef"
+        }
+      ],
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "images": [
+        "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=900&h=1125&q=80",
+        "https://images.unsplash.com/photo-1618354691373-d851c5c3a990?auto=format&fit=crop&w=900&h=1125&q=80",
+        "https://images.unsplash.com/photo-1576566588028-4147f3842f27?auto=format&fit=crop&w=900&h=1125&q=80"
+      ],
+      "description": "Test catalog item for checking category browsing and product details.",
+      "details": [
+        "Comfortable pullover for everyday wear",
+        "Available in selected sizes and colors",
+        "Easy to layer with your everyday outfits"
+      ],
+      "season": "both",
+      "featured": false,
+      "isNew": true,
+      "bestSeller": false,
+      "rating": 4.7,
+      "reviews": 66
+    },
+    {
+      "id": "test-textured-knit-pullover",
+      "name": "TEST - Textured Knit Pullover",
+      "category": "pullover",
+      "price": 2100,
+      "salePrice": 1890,
+      "colors": [
+        {
+          "name": "Brown",
+          "hex": "#5a3d2b"
+        },
+        {
+          "name": "Grey",
+          "hex": "#8c8c8c"
+        }
+      ],
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "images": [
+        "https://images.unsplash.com/photo-1618354691373-d851c5c3a990?auto=format&fit=crop&w=900&h=1125&q=80",
+        "https://images.unsplash.com/photo-1576566588028-4147f3842f27?auto=format&fit=crop&w=900&h=1125&q=80",
+        "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=900&h=1125&q=80"
+      ],
+      "description": "Test catalog item for checking discounted pricing and product filters.",
+      "details": [
+        "Comfortable pullover for everyday wear",
+        "Available in selected sizes and colors",
+        "Easy to layer with your everyday outfits"
+      ],
+      "season": "both",
+      "featured": false,
+      "isNew": false,
+      "bestSeller": true,
+      "rating": 4.3,
+      "reviews": 103
+    },
+    {
+      "id": "test-everyday-canvas-sneakers",
+      "name": "TEST - Everyday Canvas Sneakers",
+      "category": "shoes",
+      "price": 2200,
+      "salePrice": null,
+      "colors": [
+        {
+          "name": "White",
+          "hex": "#f6f4ef"
+        },
+        {
+          "name": "Black",
+          "hex": "#141414"
+        }
+      ],
+      "sizes": [
+        "40",
+        "41",
+        "42",
+        "43",
+        "44",
+        "45"
+      ],
+      "images": [
+        "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&h=1125&q=80",
+        "https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=900&h=1125&q=80",
+        "https://images.unsplash.com/photo-1491553895911-0055eca6402d?auto=format&fit=crop&w=900&h=1125&q=80"
+      ],
+      "description": "Test catalog item for checking category browsing and product details.",
+      "details": [
+        "Genuine materials, hand finished",
+        "Cushioned insole for all-day comfort",
+        "Wipe clean with a soft cloth"
+      ],
+      "season": "both",
+      "featured": false,
+      "isNew": true,
+      "bestSeller": false,
+      "rating": 4.6,
+      "reviews": 140
+    },
+    {
+      "id": "test-leather-ankle-boots",
+      "name": "TEST - Leather Ankle Boots",
+      "category": "shoes",
+      "price": 2700,
+      "salePrice": 2430,
+      "colors": [
+        {
+          "name": "Brown",
+          "hex": "#5a3d2b"
+        },
+        {
+          "name": "Black",
+          "hex": "#141414"
+        }
+      ],
+      "sizes": [
+        "40",
+        "41",
+        "42",
+        "43",
+        "44",
+        "45"
+      ],
+      "images": [
+        "https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=900&h=1125&q=80",
+        "https://images.unsplash.com/photo-1491553895911-0055eca6402d?auto=format&fit=crop&w=900&h=1125&q=80",
+        "https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77?auto=format&fit=crop&w=900&h=1125&q=80"
+      ],
+      "description": "Test catalog item for checking discounted pricing and product filters.",
+      "details": [
+        "Genuine materials, hand finished",
+        "Cushioned insole for all-day comfort",
+        "Wipe clean with a soft cloth"
+      ],
+      "season": "both",
+      "featured": false,
+      "isNew": false,
+      "bestSeller": true,
+      "rating": 4.9,
+      "reviews": 177
+    },
+    {
+      "id": "test-sold-out-product",
+      "name": "TEST - Sold Out Product",
+      "category": "pants",
+      "price": 2500,
+      "salePrice": 2250,
+      "colors": [
+        {
+          "name": "Black",
+          "hex": "#141414"
+        },
+        {
+          "name": "Grey",
+          "hex": "#8c8c8c"
+        }
+      ],
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "images": [
+        "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=900&h=1125&q=80",
+        "https://images.unsplash.com/photo-1542272604-787c3835535d?auto=format&fit=crop&w=900&h=1125&q=80",
+        "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=900&h=1125&q=80"
+      ],
+      "description": "Test catalog item for checking the complete sold-out product state.",
+      "details": [
+        "Versatile everyday style",
+        "Available in selected sizes and colors",
+        "Easy to pair with casual and smart-casual outfits"
+      ],
+      "season": "both",
+      "featured": true,
+      "isNew": false,
+      "bestSeller": false,
+      "rating": 4.5,
+      "reviews": 34,
+      "soldOut": true,
+      "soldOutColors": [],
+      "soldOutSizes": []
+    },
+    {
+      "id": "minimal-leather-sneakers",
+      "name": "Minimal Leather Sneakers",
+      "category": "shoes",
+      "price": 2900,
+      "salePrice": null,
+      "colors": [
+        {
+          "name": "White",
+          "hex": "#f6f4ef"
+        },
+        {
+          "name": "Black",
+          "hex": "#141414"
+        }
+      ],
+      "sizes": [
+        "40",
+        "41",
+        "42",
+        "43",
+        "44",
+        "45"
+      ],
+      "images": [
+        "https://images.unsplash.com/photo-1491553895911-0055eca6402d?auto=format&fit=crop&w=900&h=1125&q=80",
+        "https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77?auto=format&fit=crop&w=900&h=1125&q=80",
+        "https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?auto=format&fit=crop&w=900&h=1125&q=80"
+      ],
+      "description": "Hand-finished Italian leather sneakers with a clean low profile and a cushioned insole.",
+      "details": [
+        "Genuine materials, hand finished",
+        "Cushioned insole for all-day comfort",
+        "Wipe clean with a soft cloth"
+      ],
+      "season": "both",
+      "featured": true,
+      "isNew": false,
+      "bestSeller": true,
+      "rating": 4.8,
+      "reviews": 71
+    },
+    {
+      "id": "chelsea-boots",
+      "name": "Chelsea Boots",
+      "category": "shoes",
+      "price": 3800,
+      "salePrice": 3040,
+      "colors": [
+        {
+          "name": "Black",
+          "hex": "#141414"
+        },
+        {
+          "name": "Brown",
+          "hex": "#5a3d2b"
+        }
+      ],
+      "sizes": [
+        "40",
+        "41",
+        "42",
+        "43",
+        "44",
+        "45"
+      ],
+      "images": [
+        "https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77?auto=format&fit=crop&w=900&h=1125&q=80",
+        "https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?auto=format&fit=crop&w=900&h=1125&q=80",
+        "https://images.unsplash.com/photo-1460353581641-37baddab0fa2?auto=format&fit=crop&w=900&h=1125&q=80"
+      ],
+      "description": "Smooth leather Chelsea boots with elastic side panels, pull tab and a durable stacked sole.",
+      "details": [
+        "Genuine materials, hand finished",
+        "Cushioned insole for all-day comfort",
+        "Wipe clean with a soft cloth"
+      ],
+      "season": "both",
+      "featured": false,
+      "isNew": false,
+      "bestSeller": true,
+      "rating": 4.4,
+      "reviews": 108
+    },
+    {
+      "id": "suede-loafers",
+      "name": "Suede Loafers",
+      "category": "shoes",
+      "price": 3100,
+      "salePrice": null,
+      "colors": [
+        {
+          "name": "Brown",
+          "hex": "#5a3d2b"
+        },
+        {
+          "name": "Black",
+          "hex": "#141414"
+        },
+        {
+          "name": "Beige",
+          "hex": "#d9c9ae"
+        }
+      ],
+      "sizes": [
+        "40",
+        "41",
+        "42",
+        "43",
+        "44",
+        "45"
+      ],
+      "images": [
+        "https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?auto=format&fit=crop&w=900&h=1125&q=80",
+        "https://images.unsplash.com/photo-1460353581641-37baddab0fa2?auto=format&fit=crop&w=900&h=1125&q=80",
+        "https://images.unsplash.com/photo-1520639888713-7851133b1ed0?auto=format&fit=crop&w=900&h=1125&q=80"
+      ],
+      "description": "Soft suede loafers with a flexible leather sole. Effortless with tailoring or denim.",
+      "details": [
+        "Genuine materials, hand finished",
+        "Cushioned insole for all-day comfort",
+        "Wipe clean with a soft cloth"
+      ],
+      "season": "both",
+      "featured": false,
+      "isNew": true,
+      "bestSeller": false,
+      "rating": 4.7,
+      "reviews": 145
+    },
+    {
+      "id": "court-sneakers",
+      "name": "Court Sneakers",
+      "category": "shoes",
+      "price": 2400,
+      "salePrice": 1920,
+      "colors": [
+        {
+          "name": "White",
+          "hex": "#f6f4ef"
+        },
+        {
+          "name": "Grey",
+          "hex": "#8c8c8c"
+        }
+      ],
+      "sizes": [
+        "40",
+        "41",
+        "42",
+        "43",
+        "44",
+        "45"
+      ],
+      "images": [
+        "https://images.unsplash.com/photo-1460353581641-37baddab0fa2?auto=format&fit=crop&w=900&h=1125&q=80",
+        "https://images.unsplash.com/photo-1520639888713-7851133b1ed0?auto=format&fit=crop&w=900&h=1125&q=80",
+        "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&h=1125&q=80"
+      ],
+      "description": "Retro-inspired court sneakers with a vulcanised sole and perforated detailing.",
+      "details": [
+        "Genuine materials, hand finished",
+        "Cushioned insole for all-day comfort",
+        "Wipe clean with a soft cloth"
+      ],
+      "season": "both",
+      "featured": false,
+      "isNew": false,
+      "bestSeller": true,
+      "rating": 4.3,
+      "reviews": 182
+    },
+    {
+      "id": "trail-runner",
+      "name": "Trail Runner",
+      "category": "shoes",
+      "price": 3300,
+      "salePrice": null,
+      "colors": [
+        {
+          "name": "Grey",
+          "hex": "#8c8c8c"
+        },
+        {
+          "name": "Black",
+          "hex": "#141414"
+        }
+      ],
+      "sizes": [
+        "40",
+        "41",
+        "42",
+        "43",
+        "44",
+        "45"
+      ],
+      "images": [
+        "https://images.unsplash.com/photo-1520639888713-7851133b1ed0?auto=format&fit=crop&w=900&h=1125&q=80",
+        "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&h=1125&q=80",
+        "https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=900&h=1125&q=80"
+      ],
+      "description": "Lightweight technical runners with a grippy outsole and breathable engineered mesh upper.",
+      "details": [
+        "Genuine materials, hand finished",
+        "Cushioned insole for all-day comfort",
+        "Wipe clean with a soft cloth"
+      ],
+      "season": "both",
+      "featured": false,
+      "isNew": false,
+      "bestSeller": false,
+      "rating": 4.6,
+      "reviews": 39
+    }
+  ],
+  "categories": [
+    {
+      "id": "pants",
+      "label": "Pants",
+      "labelAr": "بناطيل",
+      "image": "https://images.unsplash.com/photo-1542272604-787c3835535d?auto=format&fit=crop&w=700&h=900&q=80"
+    },
+    {
+      "id": "hoodies",
+      "label": "Hoodies",
+      "labelAr": "هودي",
+      "image": "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=700&h=900&q=80"
+    },
+    {
+      "id": "jackets",
+      "label": "Jackets",
+      "labelAr": "جواكت",
+      "image": "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=700&h=900&q=80"
+    },
+    {
+      "id": "pullover",
+      "label": "Pullover",
+      "labelAr": "بلوفرات",
+      "image": "https://images.unsplash.com/photo-1618354691373-d851c5c3a990?auto=format&fit=crop&w=700&h=900&q=80"
+    },
+    {
+      "id": "shoes",
+      "label": "Shoes",
+      "labelAr": "أحذية",
+      "image": "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=700&h=900&q=80"
+    }
+  ]
+}

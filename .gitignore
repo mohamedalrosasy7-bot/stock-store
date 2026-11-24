@@ -10,3 +10,6 @@ Thumbs.db
 .vite/
 .e2e/shots/
 mobile-admin-color-images.png
+
+.dev.vars
+.wrangler/

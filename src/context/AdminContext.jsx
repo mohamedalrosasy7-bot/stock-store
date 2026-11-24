@@ -1,15 +1,10 @@
 import { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { CATEGORIES, IMAGES, PRODUCTS, TEST_PRODUCTS, normalizeSeason } from '../data/products';
+import { CATEGORIES, IMAGES, PRODUCTS, normalizeSeason } from '../data/products';
+import { api } from '../lib/api';
 
+// Data now lives in D1 behind /api/*. localStorage keys are only kept to
+// migrate legacy data (one time) and as a cache for the offline case.
 const ADMIN_KEY = 'mv_admin';
-const PRODUCTS_KEY = 'mv_products_admin';
-const CATEGORIES_KEY = 'mv_categories_admin';
-const TEST_PRODUCTS_MIGRATION_KEY = 'mv_test_products_seed_v3';
-const SEASON_VISIBILITY_KEY = 'mv_hidden_seasons';
-const SHOP_ADS_KEY = 'mv_shop_ads';
-const SHOP_AD_SEED_KEY = 'mv_shop_ads_seeded_v1';
-const SHOP_AD_PHOTO_MIGRATION_KEY = 'mv_shop_ads_photo_v1';
-const SHOP_AD_PROMO_MIGRATION_KEY = 'mv_shop_ads_promo_v1';
 
 const DEFAULT_AD_BANNERS = [
   {
@@ -41,135 +36,78 @@ const DEFAULT_AD_BANNERS = [
   },
 ];
 
-const ADMIN_CREDENTIALS = {
-  username: 'admin',
-  password: 'admin123',
-};
+// Admin identity lives in D1 (email + PBKDF2 hash). The signed session cookie
+// is issued by /api/auth/login — no client-side credentials anymore.
 
+// While the API loads (or when it is unreachable), the static catalog keeps
+// the storefront alive. This is the same list the seeder put into D1.
 const initialProducts = JSON.parse(JSON.stringify(PRODUCTS));
 
-const loadCategories = () => {
-  try {
-    const saved = localStorage.getItem(CATEGORIES_KEY);
-    if (!saved) return CATEGORIES;
-    const parsed = JSON.parse(saved);
-    if (!Array.isArray(parsed)) {
-      throw new Error('Stored categories must be a list.');
-    }
-    const categories = parsed.filter((category) =>
-      category &&
-      category.id !== 'sweaters' &&
-      typeof category.id === 'string' &&
-      typeof category.label === 'string' &&
-      typeof category.labelAr === 'string'
-    ).map((category) => ({
-      ...category,
-      image: typeof category.image === 'string' && category.image
-        ? category.image
-        : IMAGES.categories[category.id] || IMAGES.banner,
-    }));
-    if (!categories.length) throw new Error('Stored categories cannot be empty.');
-    return categories;
-  } catch (error) {
-    console.error('Unable to load categories.', error);
-    return CATEGORIES;
-  }
-};
-
-const loadShopAds = () => {
-  try {
-    const saved = localStorage.getItem(SHOP_ADS_KEY);
-    if (!saved) {
-      localStorage.setItem(SHOP_AD_SEED_KEY, '1');
-      return { enabled: true, banners: DEFAULT_AD_BANNERS };
-    }
-    const parsed = JSON.parse(saved);
-    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed) || !Array.isArray(parsed.banners)) {
-      throw new Error('Stored shop advertisements must contain a banner list.');
-    }
-    const ads = {
-      enabled: parsed.enabled !== false,
-      banners: parsed.banners.filter((banner) =>
-        banner && typeof banner.id === 'string' && typeof banner.src === 'string'
-      ),
-    };
-    if (
-      localStorage.getItem(SHOP_AD_PHOTO_MIGRATION_KEY) !== '1' ||
-      localStorage.getItem(SHOP_AD_PROMO_MIGRATION_KEY) !== '1'
-    ) {
-      const defaultBanners = new Map(DEFAULT_AD_BANNERS.map((banner) => [banner.id, banner]));
-      ads.banners = ads.banners.map((banner) => {
-        const replacement = defaultBanners.get(banner.id);
-        return replacement
-          ? { ...banner, ...replacement, active: banner.active }
-          : banner;
-      });
-      localStorage.setItem(SHOP_ADS_KEY, JSON.stringify(ads));
-      localStorage.setItem(SHOP_AD_PHOTO_MIGRATION_KEY, '1');
-      localStorage.setItem(SHOP_AD_PROMO_MIGRATION_KEY, '1');
-    }
-    if (!ads.banners.length && localStorage.getItem(SHOP_AD_SEED_KEY) !== '1') {
-      ads.banners = DEFAULT_AD_BANNERS;
-      localStorage.setItem(SHOP_ADS_KEY, JSON.stringify(ads));
-    }
-    localStorage.setItem(SHOP_AD_SEED_KEY, '1');
-    return ads;
-  } catch (error) {
-    console.error('Unable to load shop advertisements.', error);
-    return { enabled: true, banners: [] };
-  }
-};
+const normalizeCategory = (category) => ({
+  ...category,
+  image: typeof category.image === 'string' && category.image
+    ? category.image
+    : IMAGES.categories[category.id] || IMAGES.banner,
+});
 
 const AdminContext = createContext(null);
 
 export function AdminProvider({ children }) {
+  // Session comes from the signed httpOnly cookie; the sessionStorage flag is
+  // only a fast hint so the admin UI doesn't flash the login screen.
   const [isLoggedIn, setIsLoggedIn] = useState(() => {
     try {
       return sessionStorage.getItem(ADMIN_KEY) === '1';
     } catch { return false; }
   });
 
-  const [categories, setCategories] = useState(loadCategories);
-  const [products, setProducts] = useState(() => {
-    try {
-      const saved = localStorage.getItem(PRODUCTS_KEY);
-      if (!saved) {
-        localStorage.setItem(SWEATER_MIGRATION_KEY, '1');
-        localStorage.setItem(TEST_PRODUCTS_MIGRATION_KEY, '1');
-        return initialProducts;
-      }
-      const parsed = JSON.parse(saved);
-      if (!Array.isArray(parsed)) return initialProducts;
-      const currentProducts = parsed.filter((product) =>
-        product.category !== 'sweaters' &&
-        categories.some((category) => category.id === product.category)
-      );
-      if (localStorage.getItem(TEST_PRODUCTS_MIGRATION_KEY) !== '1') {
-        const existingIds = new Set(currentProducts.map((product) => product.id));
-        currentProducts.push(...TEST_PRODUCTS.filter((product) => !existingIds.has(product.id)));
-        localStorage.setItem(TEST_PRODUCTS_MIGRATION_KEY, '1');
-      }
-      return currentProducts;
-    } catch { return initialProducts; }
-  });
-
-  const [shopAds, setShopAds] = useState(loadShopAds);
+  const [categories, setCategories] = useState(() => CATEGORIES.map(normalizeCategory));
+  const [products, setProducts] = useState(initialProducts);
+  const [shopAds, setShopAds] = useState({ enabled: true, banners: DEFAULT_AD_BANNERS });
   const [status, setStatus] = useState(null); // 'loading' | 'success' | 'error'
   const [statusMsg, setStatusMsg] = useState('');
+  const [hiddenSeasons, setHiddenSeasons] = useState({});
+  const [loaded, setLoaded] = useState(false);
 
-  const saveCategories = useCallback((nextCategories, message) => {
-    try {
-      localStorage.setItem(CATEGORIES_KEY, JSON.stringify(nextCategories));
-    } catch (error) {
-      console.error('Unable to save categories.', error);
-      setStatus('error');
-      setStatusMsg('admin.toastCategorySaveFailed');
-      return false;
-    }
-    setCategories(nextCategories);
-    setStatus('success');
-    setStatusMsg(message);
-    return true;
+  const apiError = useCallback((e) => {
+    console.error('API request failed:', e?.message);
+    setStatus('error');
+    setStatusMsg('admin.toastSaveFailed');
+  }, []);
+
+  // --- initial load from the server ---
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const me = await api('/api/auth/me').catch(() => ({ admin: null }));
+        if (!alive) return;
+        setIsLoggedIn(!!me.admin);
+        if (!me.admin) {
+          try { sessionStorage.removeItem(ADMIN_KEY); } catch {}
+        }
+        const [catalog, catData, adsData, settingsData] = await Promise.all([
+          api('/api/products'),
+          api('/api/categories').catch(() => ({ categories: null })),
+          api('/api/ads').catch(() => null),
+          api('/api/settings').catch(() => ({ settings: null })),
+        ]);
+        if (!alive) return;
+        setProducts(catalog.products || []);
+        if (catData.categories?.length) setCategories(catData.categories.map(normalizeCategory));
+        if (adsData && Array.isArray(adsData.banners)) {
+          setShopAds({ enabled: adsData.enabled !== false, banners: adsData.banners });
+        }
+        if (settingsData?.settings?.hiddenSeasons) {
+          setHiddenSeasons(settingsData.settings.hiddenSeasons);
+        }
+      } catch (e) {
+        console.error('Catalog load failed:', e?.message);
+      } finally {
+        if (alive) setLoaded(true);
+      }
+    })();
+    return () => { alive = false; };
   }, []);
 
   const addCategory = useCallback((category) => {
@@ -184,13 +122,19 @@ export function AdminProvider({ children }) {
       setStatusMsg('admin.toastCategoryInvalid');
       return false;
     }
-    return saveCategories([...categories, {
+    const doc = {
       ...category,
       label: category.label.trim(),
       labelAr: category.labelAr.trim(),
       image: category.image || IMAGES.banner,
-    }], 'admin.toastCategoryAdded');
-  }, [categories, saveCategories]);
+    };
+    setCategories((prev) => [...prev, doc]);
+    setStatus('success');
+    setStatusMsg('admin.toastCategoryAdded');
+    api('/api/categories', { method: 'POST', body: doc })
+      .catch(apiError);
+    return true;
+  }, [categories, apiError]);
 
   const updateCategory = useCallback((id, updates) => {
     if (!categories.some((category) => category.id === id)) return false;
@@ -199,12 +143,17 @@ export function AdminProvider({ children }) {
       setStatusMsg('admin.toastCategoryNamesRequired');
       return false;
     }
-    return saveCategories(categories.map((category) => (
+    setCategories((prev) => prev.map((category) => (
       category.id === id
         ? { ...category, label: updates.label.trim(), labelAr: updates.labelAr.trim(), image: updates.image || category.image }
         : category
-    )), 'admin.toastCategoryUpdated');
-  }, [categories, saveCategories]);
+    )));
+    setStatus('success');
+    setStatusMsg('admin.toastCategoryUpdated');
+    api(`/api/categories/${id}`, { method: 'PUT', body: updates })
+      .catch(apiError);
+    return true;
+  }, [categories, apiError]);
 
   const deleteCategory = useCallback((id) => {
     if (products.some((product) => product.category === id)) {
@@ -217,71 +166,80 @@ export function AdminProvider({ children }) {
       setStatusMsg('admin.toastCategoryKeepOne');
       return false;
     }
-    return saveCategories(categories.filter((category) => category.id !== id), 'admin.toastCategoryDeleted');
-  }, [categories, products, saveCategories]);
+    setCategories((prev) => prev.filter((category) => category.id !== id));
+    setStatus('success');
+    setStatusMsg('admin.toastCategoryDeleted');
+    api(`/api/categories/${id}`, { method: 'DELETE' })
+      .catch(apiError);
+    return true;
+  }, [categories, products, apiError]);
 
-  useEffect(() => {
-    try { localStorage.setItem(PRODUCTS_KEY, JSON.stringify(products)); } catch {}
-  }, [products]);
-
-  useEffect(() => {
-    try { localStorage.setItem(CATEGORIES_KEY, JSON.stringify(categories)); } catch {}
-  }, [categories]);
-
-  const login = useCallback((username, password) => {
-    if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
+  const login = useCallback(async (email, password) => {
+    try {
+      await api('/api/auth/login', { method: 'POST', body: { email, password } });
       setIsLoggedIn(true);
       try { sessionStorage.setItem(ADMIN_KEY, '1'); } catch {}
       return true;
+    } catch {
+      return false;
     }
-    return false;
   }, []);
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
     setIsLoggedIn(false);
     try { sessionStorage.removeItem(ADMIN_KEY); } catch {}
+    api('/api/auth/logout', { method: 'POST' }).catch(() => {});
   }, []);
 
   const addProduct = useCallback((product) => {
     setProducts((prev) => [product, ...prev]);
     setStatus('success');
     setStatusMsg('admin.toastProductCreated');
-  }, []);
+    api('/api/products', { method: 'POST', body: product })
+      .catch(apiError);
+    return true;
+  }, [apiError]);
 
   const updateProduct = useCallback((id, updated) => {
-    setProducts((prev) => prev.map((p) => (p.id === id ? { ...p, ...updated } : p)));
+    const prev = products.find((p) => p.id === id) || {};
+    setProducts((list) => list.map((p) => (p.id === id ? { ...p, ...updated } : p)));
     setStatus('success');
     setStatusMsg('admin.toastProductSaved');
-  }, []);
+    api(`/api/products/${id}`, { method: 'PUT', body: { ...prev, ...updated, id } })
+      .catch(apiError);
+    return true;
+  }, [products, apiError]);
 
   const deleteProduct = useCallback((id) => {
-    setProducts((prev) => prev.filter((p) => p.id !== id));
+    setProducts((prev) => prev.length ? prev.filter((p) => p.id !== id) : prev);
     setStatus('success');
     setStatusMsg('admin.toastProductDeleted');
-  }, []);
+    api(`/api/products/${id}`, { method: 'DELETE' })
+      .catch(apiError);
+    return true;
+  }, [apiError]);
 
   const toggleProductActive = useCallback((id) => {
+    const current = products.find((p) => p.id === id);
+    const nextActive = current?.active === false;
     setProducts((prev) => prev.map((p) =>
-      p.id === id ? { ...p, active: p.active === false ? true : false } : p
+      p.id === id ? { ...p, active: nextActive } : p
     ));
     setStatus('success');
     setStatusMsg('admin.toastProductStatusUpdated');
-  }, []);
+    api(`/api/products/${id}`, { method: 'PUT', body: { ...current, active: nextActive, id } })
+      .catch(apiError);
+    return true;
+  }, [products, apiError]);
 
   const saveShopAds = useCallback((nextAds, message) => {
-    try {
-      localStorage.setItem(SHOP_ADS_KEY, JSON.stringify(nextAds));
-    } catch (error) {
-      console.error('Unable to save shop advertisements.', error);
-      setStatus('error');
-      setStatusMsg('admin.toastAdsSaveFailed');
-      return false;
-    }
     setShopAds(nextAds);
     setStatus('success');
     setStatusMsg(message);
+    api('/api/ads', { method: 'PUT', body: nextAds })
+      .catch(apiError);
     return true;
-  }, []);
+  }, [apiError]);
 
   const addAdBanners = useCallback((banners) => {
     saveShopAds({ ...shopAds, banners: [...shopAds.banners, ...banners] }, 'admin.toastAdImagesAdded');
@@ -313,41 +271,17 @@ export function AdminProvider({ children }) {
     saveShopAds({ ...shopAds, banners }, 'admin.toastAdOrderUpdated');
   }, [saveShopAds, shopAds]);
 
-  const [hiddenSeasons, setHiddenSeasons] = useState(() => {
-    try {
-      const saved = localStorage.getItem(SEASON_VISIBILITY_KEY);
-      if (!saved) return {};
-      const parsed = JSON.parse(saved);
-      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-        throw new Error('Stored seasonal visibility settings must be an object.');
-      }
-      return {
-        winter: parsed.winter === true,
-        summer: parsed.summer === true,
-      };
-    } catch (error) {
-      console.error('Unable to load seasonal visibility settings.', error);
-      return {};
-    }
-  });
-
   const toggleSeasonVisibility = useCallback((season) => {
     const hidden = !hiddenSeasons[season];
     const next = { ...hiddenSeasons, [season]: hidden };
-    try {
-      localStorage.setItem(SEASON_VISIBILITY_KEY, JSON.stringify(next));
-    } catch (error) {
-      console.error('Unable to save seasonal visibility settings.', error);
-      setStatus('error');
-      setStatusMsg('admin.toastSeasonSaveFailed');
-      return;
-    }
     setHiddenSeasons(next);
     setStatus('success');
     setStatusMsg(hidden
       ? `admin.toast${season === 'winter' ? 'Winter' : 'Summer'}Hidden`
       : `admin.toast${season === 'winter' ? 'Winter' : 'Summer'}Visible`);
-  }, [hiddenSeasons]);
+    api('/api/settings', { method: 'PUT', body: { hiddenSeasons: next } })
+      .catch(apiError);
+  }, [hiddenSeasons, apiError]);
 
   const isSeasonHidden = useCallback(
     (season) => !!hiddenSeasons[normalizeSeason(season)],
@@ -363,6 +297,7 @@ export function AdminProvider({ children }) {
     isLoggedIn,
     login,
     logout,
+    loaded,
     categories,
     addCategory,
     updateCategory,

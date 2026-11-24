@@ -5,14 +5,7 @@ import { useSEO } from '../hooks/useSEO';
 import { buildCustomerWhatsAppLink } from '../lib/whatsapp';
 import { ArrowIcon, CheckIcon, WhatsAppIcon } from '../components/Icons';
 
-const findOrder = (id, stateOrder) => {
-  if (stateOrder && stateOrder.id === id) return stateOrder;
-  try {
-    return JSON.parse(localStorage.getItem('mv-orders') || '[]').find((o) => o.id === id) || null;
-  } catch {
-    return null;
-  }
-};
+const findOrder = (id, stateOrder) => (stateOrder && stateOrder.id === id ? stateOrder : null);
 
 export default function OrderSuccess() {
   const { t, lang } = useLang();

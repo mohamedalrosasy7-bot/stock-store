@@ -9,7 +9,7 @@ export default function AdminLogin() {
   const { t } = useLang();
   const navigate = useNavigate();
   const { login, isLoggedIn } = useAdmin();
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
@@ -19,11 +19,11 @@ export default function AdminLogin() {
     if (isLoggedIn) navigate('/admin', { replace: true });
   }, [isLoggedIn, navigate]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
-    const ok = login(username, password);
+    const ok = await login(email, password);
     setLoading(false);
     if (ok) {
       navigate('/admin');
@@ -91,12 +91,12 @@ export default function AdminLogin() {
 
             <form className="admin-login-form" onSubmit={handleSubmit} noValidate>
               <div className="admin-login-field">
-                <label htmlFor="admin-username">{t('admin.username')}</label>
+                <label htmlFor="admin-email">{t('admin.username')}</label>
                 <input
-                  id="admin-username"
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  id="admin-email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   placeholder={t('admin.usernamePlaceholder')}
                   autoComplete="username"
                   aria-invalid={Boolean(error)}

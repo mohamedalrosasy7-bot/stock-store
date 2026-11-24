@@ -3,6 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useAdmin } from '../context/AdminContext';
 import { useLang } from '../context/LangContext';
 import { SEASONS, getCategoryName, normalizeSeason } from '../data/products';
+import { uploadStoreImage, isAllowedImage, purgeCloudinaryImages } from '../lib/images';
+import { deleteImage } from '../lib/api';
 import { money } from '../config';
 import { CloseIcon, ArrowIcon } from '../components/Icons';
 
@@ -121,6 +123,11 @@ export default function AdminProductForm() {
     };
     if (isEdit) updateProduct(existing.id, payload);
     else addProduct(payload);
+    // Best-effort cleanup of images the admin removed while editing but that
+    // are no longer referenced anywhere in the saved document.
+    purgeCloudinaryImages(
+      productImages(existing || {}).filter((src) => !productImages(payload).includes(src))
+    ).catch(() => {});
     setSaved(true);
     setLoading(false);
     setTimeout(() => navigate('/admin/products'), 900);
@@ -142,27 +149,34 @@ export default function AdminProductForm() {
     };
   });
   const updateColor = (i, field, value) => setForm((p) => ({ ...p, colors: p.colors.map((c, idx) => idx === i ? { ...c, [field]: value } : c) }));
-  const addColorImages = (i, files) => {
-    Array.from(files || []).forEach((file) => {
-      if (!file.type.startsWith('image/')) return;
-      const reader = new FileReader();
-      reader.onload = () => setForm((current) => ({
-        ...current,
-        colors: current.colors.map((color, idx) =>
-          idx === i ? { ...color, images: [...(color.images || []), String(reader.result)] } : color
-        ),
-      }));
-      reader.readAsDataURL(file);
-    });
+  // Uploads through the Cloudinary pipeline (compressed + EXIF-oriented in
+  // the browser, stored server-side); no base64 blobs in D1.
+  const addColorImages = async (i, files) => {
+    for (const file of Array.from(files || [])) {
+      if (!isAllowedImage(file)) continue;
+      try {
+        const url = await uploadStoreImage(file);
+        setForm((current) => ({
+          ...current,
+          colors: current.colors.map((color, idx) =>
+            idx === i ? { ...color, images: [...(color.images || []), url] } : color
+          ),
+        }));
+      } catch { /* upload already surfaced by the picker */ }
+    }
   };
-  const removeColorImage = (i, imageIndex) => setForm((p) => ({
-    ...p,
-    colors: p.colors.map((color, idx) =>
-      idx === i
-        ? { ...color, images: (color.images || []).filter((_, currentIndex) => currentIndex !== imageIndex) }
-        : color
-    ),
-  }));
+  const removeColorImage = (i, imageIndex) => {
+    const src = (form.colors[i]?.images || [])[imageIndex];
+    if (src) deleteImage(src).catch(() => {});
+    setForm((p) => ({
+      ...p,
+      colors: p.colors.map((color, idx) =>
+        idx === i
+          ? { ...color, images: (color.images || []).filter((_, currentIndex) => currentIndex !== imageIndex) }
+          : color
+      ),
+    }));
+  };
   const toggleSize = (s) => setForm((p) => {
     const removing = p.sizes.includes(s);
     return {
@@ -194,14 +208,15 @@ export default function AdminProductForm() {
     setCustomSize('');
   };
 
-  const handleImages = (ev) => {
+  const handleImages = async (ev) => {
     const files = Array.from(ev.target.files || []);
-    files.forEach((file) => {
-      if (!file.type.startsWith('image/')) return;
-      const reader = new FileReader();
-      reader.onload = () => setForm((p) => ({ ...p, images: [...p.images, String(reader.result)] }));
-      reader.readAsDataURL(file);
-    });
+    for (const file of files) {
+      if (!isAllowedImage(file)) continue;
+      try {
+        const url = await uploadStoreImage(file);
+        setForm((p) => ({ ...p, images: [...p.images, url] }));
+      } catch { /* keep the form usable when an upload fails */ }
+    }
     ev.target.value = '';
   };
 
@@ -409,7 +424,7 @@ export default function AdminProductForm() {
                     <button type="button" onClick={() => moveImage(i, -1)} disabled={i === 0} aria-label={t('admin.moveLeft')}><ArrowIcon size={14} style={{ transform: 'rotate(180deg)' }} /></button>
                     <span>{i + 1}</span>
                     <button type="button" onClick={() => moveImage(i, 1)} disabled={i === form.images.length - 1} aria-label={t('admin.moveRight')}><ArrowIcon size={14} /></button>
-                    <button type="button" className="danger" onClick={() => set('images', form.images.filter((_, idx) => idx !== i))} aria-label={t('admin.removeImage')}><CloseIcon size={14} /></button>
+                    <button type="button" className="danger" onClick={() => { const src = form.images[i]; if (src) deleteImage(src).catch(() => {}); set('images', form.images.filter((_, idx) => idx !== i)); }} aria-label={t('admin.removeImage')}><CloseIcon size={14} /></button>
                   </div>
                 </div>
               ))}

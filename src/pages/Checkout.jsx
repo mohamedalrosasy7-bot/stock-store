@@ -37,6 +37,7 @@ export default function Checkout() {
   const remaining = subtotal > STORE.freeShippingThreshold ? 0 : STORE.freeShippingThreshold - subtotal + 1;
   const freeShippingProgress = Math.min(100, Math.max(0, (subtotal / STORE.freeShippingThreshold) * 100));
   const [errors, setErrors] = useState({});
+  const [placing, setPlacing] = useState(false);
 
   if (lines.length === 0 && !placed.current) return <Navigate to="/cart" replace />;
 
@@ -53,7 +54,7 @@ export default function Checkout() {
   const liveProduct = (line) => liveProducts.find((p) => p.id === line.product.id) || line.product;
   const lineImage = (line) => colorImage(liveProduct(line), line.color) || (line.product.images || [])[0] || '';
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
     const found = {};
     Object.keys(validators).forEach((k) => {
@@ -68,9 +69,17 @@ export default function Checkout() {
       return;
     }
 
-    // Open the WhatsApp tab synchronously inside the user's click (before any
-    // async work) — browsers only allow popups directly tied to a user gesture.
-    // The URL is filled in once the order has its sequential number below.
+    setPlacing(true);
+    try {
+      await placeOrder();
+    } finally {
+      setPlacing(false);
+    }
+  };
+  // Places the order via POST /api/orders (server re-derives all prices),
+  // then sends the details to the store WhatsApp. Must run inside the user's
+  // original click: the WhatsApp tab is opened synchronously before any await.
+  const placeOrder = async () => {
     const waWindow = window.open('', '_blank');
 
     // normalize the city back to its canonical English key so orders/WhatsApp
@@ -88,6 +97,7 @@ export default function Checkout() {
       },
       payment: form.payment === 'cod' ? 'cod' : form.payment === 'instapay' ? 'instapay' : 'ewallet',
       items: lines.map((l) => ({
+        id: l.product.id,
         name: l.product.name,
         size: l.size,
         color: l.color,
@@ -101,9 +111,14 @@ export default function Checkout() {
       total,
     };
 
-    // OrdersProvider assigns the sequential order number (#1, #2, …) and
-    // persists it so the order shows up in the admin dashboard immediately.
-    const saved = addOrder(order);
+    let saved;
+    try {
+      saved = await addOrder(order);
+    } catch {
+      try { waWindow?.close(); } catch { /* already gone */ }
+      toast('checkout.orderFailed', 'error');
+      return;
+    }
 
     // Send the order details to the store's WhatsApp automatically — the
     // customer just presses Send in the opened chat.
@@ -220,7 +235,7 @@ export default function Checkout() {
             <div><dt>{t('cart.shipping')}</dt><dd>{shipping === 0 ? t('cart.free') : money(shipping)}</dd></div>
             <div className="grand"><dt>{t('cart.total')}</dt><dd>{money(total)}</dd></div>
           </dl>
-          <button type="submit" className="btn btn-lg btn-full">{t('checkout.confirmOrder')}</button>
+          <button type="submit" className="btn btn-lg btn-full" disabled={placing}>{placing ? t('checkout.placingOrder') : t('checkout.confirmOrder')}</button>
           <p className="muted small center">
             {t('checkout.youWillPay', {
               amount: money(total),

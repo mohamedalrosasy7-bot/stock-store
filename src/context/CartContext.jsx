@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useMemo } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
-import { effectivePrice, getProduct } from '../data/products';
+import { useAdmin } from './AdminContext';
+import { effectivePrice } from '../data/products';
 import { STORE } from '../config';
 
 const CartContext = createContext(null);
@@ -9,6 +10,9 @@ const MAX_QTY = 10;
 export function CartProvider({ children }) {
   // Only ids/options/qty are persisted; prices are always read from the catalog.
   const [items, setItems] = useLocalStorage('mv-cart', []);
+  // Live catalog from D1 (admin-created products included). AdminProvider wraps
+  // CartProvider, so this is always available.
+  const { products } = useAdmin();
 
   const addItem = useCallback(
     (product, { size, color, qty = 1 }) => {
@@ -44,7 +48,7 @@ export function CartProvider({ children }) {
 
   const value = useMemo(() => {
     const lines = items
-      .map((i) => ({ ...i, product: getProduct(i.id) }))
+      .map((i) => ({ ...i, product: products.find((p) => p.id === i.id) }))
       .filter((l) => l.product)
       .filter((l) =>
         l.product.soldOut !== true &&
@@ -56,7 +60,7 @@ export function CartProvider({ children }) {
     const subtotal = lines.reduce((s, l) => s + l.total, 0);
     const shipping = subtotal === 0 || subtotal > STORE.freeShippingThreshold ? 0 : STORE.shippingFee;
     return { lines, count, subtotal, shipping, total: subtotal + shipping, addItem, removeItem, setQty, clear, MAX_QTY };
-  }, [items, addItem, removeItem, setQty, clear]);
+  }, [items, products, addItem, removeItem, setQty, clear]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }

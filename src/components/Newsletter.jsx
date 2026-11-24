@@ -1,29 +1,35 @@
 import { useState } from 'react';
-import { useLocalStorage } from '../hooks/useLocalStorage';
+import { api } from '../lib/api';
 import { useLang } from '../context/LangContext';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 export default function Newsletter() {
-  const [subs, setSubs] = useLocalStorage('mv-newsletter', []);
   const [email, setEmail] = useState('');
   const [msg, setMsg] = useState(null);
+  const [busy, setBusy] = useState(false);
   const { t } = useLang();
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
+    if (busy) return;
     const value = email.trim().toLowerCase();
     if (!EMAIL_RE.test(value)) {
       setMsg({ type: 'error', key: 'newsletter.invalidEmail' });
       return;
     }
-    if (subs.includes(value)) {
-      setMsg({ type: 'info', key: 'newsletter.already' });
-      return;
+    setBusy(true);
+    try {
+      // Server is the source of truth (D1 `newsletter` table): returns
+      // `welcome` for a new subscriber or `already` when the email exists.
+      const data = await api('/api/newsletter', { method: 'POST', body: { email: value } });
+      setEmail('');
+      setMsg({ type: data.message === 'already' ? 'info' : 'success', key: `newsletter.${data.message}` });
+    } catch {
+      setMsg({ type: 'error', key: 'newsletter.invalidEmail' });
+    } finally {
+      setBusy(false);
     }
-    setSubs([...subs, value]);
-    setEmail('');
-    setMsg({ type: 'success', key: 'newsletter.welcome' });
   };
 
   return (
@@ -42,8 +48,9 @@ export default function Newsletter() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               aria-label={t('newsletter.placeholder')}
+              disabled={busy}
             />
-            <button className="btn" type="submit">
+            <button className="btn" type="submit" disabled={busy}>
               {t('newsletter.subscribe')}
             </button>
           </div>
