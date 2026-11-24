@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: Deploy to Cloudflare Pages
 
 on:
   push:
@@ -7,35 +7,46 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
-  group: pages
+  group: cloudflare-pages-production
   cancel-in-progress: true
 
 jobs:
-  build:
+  deploy:
+    # Keep publishing paused until the Cloudflare account, project and D1
+    # binding are configured. Set this repository variable to "true" last.
+    if: ${{ vars.CLOUDFLARE_DEPLOY_ENABLED == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
+      - name: Check Cloudflare configuration
+        run: |
+          if grep -q 'REPLACE_WITH_YOUR_D1_DATABASE_ID' wrangler.toml; then
+            echo "::error::Set the production D1 database ID in wrangler.toml before enabling deployment."
+            exit 1
+          fi
+          if grep -q 'REPLACE_WITH_YOUR_CLOUD_NAME' wrangler.toml; then
+            echo "::error::Set the Cloudinary cloud name in wrangler.toml before enabling deployment."
+            exit 1
+          fi
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "::error::Set CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID in GitHub repository secrets."
+            exit 1
+          fi
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       - run: npm ci
       - run: npm run build
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: dist
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
+        env:
+          VITE_CLOUDINARY_CLOUD_NAME: ${{ vars.VITE_CLOUDINARY_CLOUD_NAME }}
+      - name: Deploy Pages and Functions
+        run: npx wrangler pages deploy dist --project-name stock-store --branch main
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

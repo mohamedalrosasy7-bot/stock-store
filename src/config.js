@@ -1,7 +1,9 @@
+import { STORE_PRICING } from '../shared/pricing.js';
+
 export const STORE = {
   name: 'STOCK STORE',
   tagline: 'Contemporary fashion, considered.',
-  currency: 'EGP',
+  ...STORE_PRICING,
   whatsapp: '201289661122',
   email: 'mohamedalrosasy7@gmail.com',
   phone: '01289661122',
@@ -10,8 +12,6 @@ export const STORE = {
     { key: 'clothing', address: 'المنشية، شارع متولي سردينة' },
     { key: 'shoes', address: 'المنشية، شارع برج الشروق' },
   ],
-  freeShippingThreshold: 2500,
-  shippingFee: 120,
   social: {
     instagram: 'https://www.instagram.com/stockstore6?cnvx=MWcycnUyNTBzZDM5dg==',
     facebook: 'https://www.facebook.com/share/19nwErp11m/',

@@ -2,6 +2,7 @@
 // POST /api/orders    — public: place an order from the storefront
 import { json, bad, readJson, rateLimit } from '../../_lib/util.js';
 import { requireAdmin } from '../../_lib/auth.js';
+import { STORE_PRICING } from '../../../shared/pricing.js';
 
 const orderId = () => `ord_${Date.now().toString(36)}${crypto.randomUUID().slice(0, 6)}`;
 
@@ -88,7 +89,7 @@ export async function onRequestPost(context) {
       image: typeof it.image === 'string' ? it.image.slice(0, 500) : (product.images?.[0] || null),
     });
   }
-  const shipping = subtotal >= 2500 ? 0 : 120;
+  const shipping = subtotal >= STORE_PRICING.freeShippingThreshold ? 0 : STORE_PRICING.shippingFee;
   const total = subtotal + shipping;
 
   const id = orderId();

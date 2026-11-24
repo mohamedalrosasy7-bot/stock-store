@@ -17,10 +17,8 @@ export async function onRequestPost(context) {
   const file = form.get('file');
   if (!file || typeof file === 'string') return bad('file field is required.');
   if (file.size > 8 * 1024 * 1024) return bad('Max image size is 8MB.');
-  if ((file.type || '').startsWith('image/')) {
-    // ok
-  } else {
-    return bad('Only images are allowed.');
+  if (!/^image\/(jpeg|png|webp|gif|avif)$/i.test(file.type || '')) {
+    return bad('Only JPEG, PNG, WebP, GIF or AVIF images are allowed.');
   }
 
   const folder = env.CLOUDINARY_FOLDER || 'stock-store';
