@@ -108,20 +108,25 @@ export default async function t2({ page, results, ok }) {
       return w;
     };
   });
-  await type(page, '#fullName', 'Ahmed Hassan');
+  await type(page, '#fullName', `E2E Test ${process.env.E2E_RUN_ID || Date.now()}`);
   await type(page, '#phone', '+201234567890');
   await type(page, '#address', '12 Test Street, Maadi');
   await type(page, '#city', 'Cairo');
   await page.click('input[name="payment"][value="instapay"]');
   await sleep(300);
   ok('checkout: instapay selected note', ((await txt(page, '.summary .center')) || '').includes('InstaPay'));
+  const orderResponsePromise = page.waitForResponse((response) =>
+    new URL(response.url()).pathname === '/api/orders' && response.request().method() === 'POST'
+  );
   await smartClick(page, '.summary button[type="submit"]');
+  const orderResponse = await orderResponsePromise;
+  const savedOrder = await orderResponse.json();
   await page.waitForFunction(() => location.hash.includes('/order/'), { timeout: 6000 });
   await sleep(700);
   const orderHash = await hash(page);
   ok('order: success page', ((await txt(page, '.success h1')) || '').includes('confirmed'));
-  const orders = JSON.parse((await lsGet(page, 'mv-orders')) || '[]');
-  ok('order: saved to localStorage', orders.length === 1 && orderHash.includes(orders[0].id));
+  ok('order: saved in D1', orderResponse.status() === 201 && !!savedOrder.order?.id
+    && orderHash.includes(savedOrder.order.id));
   ok('order: cart cleared after purchase', !(await exists(page, 'a[href="#/cart"] .count')));
   const waHref = await attr(page, 'a[href*="wa.me"]', 'href');
   ok('order: whatsapp link present', !!waHref && waHref.startsWith('https://wa.me/'));
@@ -145,6 +150,9 @@ export default async function t2({ page, results, ok }) {
   ok('order: whatsapp tab redirected to wa.me',
     otherUrls.some((u) => u.includes('201289661122') && (u.includes('wa.me') || u.includes('whatsapp'))),
     otherUrls.join(' | ').slice(0, 200));
+  for (const other of await page.browser().pages()) {
+    if (other !== page) await other.close({ runBeforeUnload: false });
+  }
   await clickByText(page, '.success a', 'Continue shopping');
   await sleep(600);
   ok('order: continue shopping -> /shop', (await hash(page)) === '#/shop');

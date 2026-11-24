@@ -1,34 +1,56 @@
 // Tiny fetch client for the /api/* Functions. Same-origin (Cloudflare Pages),
 // so cookies ride along automatically.
 const inflight = new Map();
+const REQUEST_TIMEOUT_MS = 30_000;
 
 export async function api(path, { method = 'GET', body, signal } = {}) {
   const key = `${method} ${path} ${body ? JSON.stringify(body) : ''}`;
   if (method === 'GET' && inflight.has(key)) return inflight.get(key);
 
   const promise = (async () => {
-    const res = await fetch(path, {
-      method,
-      headers: body !== undefined ? { 'content-type': 'application/json' } : undefined,
-      body: body !== undefined ? JSON.stringify(body) : undefined,
-      credentials: 'same-origin',
-      // Always talk to the Functions: D1 is the source of truth and admin edits
-      // must show up instantly. React state is the instant-render cache.
-      cache: 'no-store',
-      signal,
-    });
-    let data = null;
+    const controller = new AbortController();
+    let timedOut = false;
+    const abort = () => controller.abort(signal?.reason);
+    if (signal?.aborted) abort();
+    else signal?.addEventListener('abort', abort, { once: true });
+    const timeout = setTimeout(() => {
+      timedOut = true;
+      controller.abort();
+    }, REQUEST_TIMEOUT_MS);
+
     try {
-      data = await res.json();
-    } catch {
-      /* non-JSON error page */
+      const res = await fetch(path, {
+        method,
+        headers: body !== undefined ? { 'content-type': 'application/json' } : undefined,
+        body: body !== undefined ? JSON.stringify(body) : undefined,
+        credentials: 'same-origin',
+        // Always talk to the Functions: D1 is the source of truth and admin edits
+        // must show up instantly. React state is the instant-render cache.
+        cache: 'no-store',
+        signal: controller.signal,
+      });
+      let data = null;
+      try {
+        data = await res.json();
+      } catch {
+        /* non-JSON error page */
+      }
+      if (!res.ok) {
+        const err = new Error((data && data.error) || `Request failed (${res.status})`);
+        err.status = res.status;
+        throw err;
+      }
+      return data;
     }
-    if (!res.ok) {
-      const err = new Error((data && data.error) || `Request failed (${res.status})`);
-      err.status = res.status;
-      throw err;
+    catch (error) {
+      if (timedOut) {
+        throw new Error('Request timed out. Please check your connection and try again.');
+      }
+      throw error;
+    } finally {
+      clearTimeout(timeout);
+      signal?.removeEventListener('abort', abort);
     }
-    return data;
   })();
 
   if (method === 'GET') {

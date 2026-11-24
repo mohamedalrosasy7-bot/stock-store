@@ -351,6 +351,8 @@ export default {
     productNotFound: 'المنتج غير موجود.',
     backToProducts: 'العودة إلى المنتجات',
     productSaved: 'تم حفظ المنتج! جارٍ التحويل…',
+    productSaveFailed: 'تعذّر حفظ المنتج. تحقق من اتصال الإنترنت وحاول مرة أخرى.',
+    productSaveTimedOut: 'استغرق الحفظ وقتاً طويلاً. تحقق من اتصال الإنترنت ثم أعد المحاولة.',
     editProduct: 'تعديل المنتج',
     addProduct: 'إضافة منتج',
     updateDetails: 'تحديث تفاصيل المنتج',

@@ -105,15 +105,27 @@ export default async function t1({ page, results, ok }) {
   await smartClick(page, '.newsletter-row button');
   await sleep(300);
   ok('newsletter: invalid email error', ((await txt(page, '.form-msg.error')) || '').length > 3);
-  await type(page, '.newsletter-row input', 'test@stock.com');
+  const newsletterEmail = `e2e-${process.env.E2E_RUN_ID || Date.now()}@example.test`;
+  const newsletterResponse = () => page.waitForResponse((response) =>
+    new URL(response.url()).pathname === '/api/newsletter' && response.request().method() === 'POST'
+  );
+  const firstSubscribe = newsletterResponse();
+  await type(page, '.newsletter-row input', newsletterEmail);
   await smartClick(page, '.newsletter-row button');
+  const firstResponse = await firstSubscribe;
+  const firstData = await firstResponse.json();
   await sleep(300);
-  ok('newsletter: welcome on subscribe', ((await txt(page, '.form-msg.success')) || '').includes('Welcome'));
-  await type(page, '.newsletter-row input', 'test@stock.com');
+  ok('newsletter: welcome on subscribe', firstResponse.status() === 201 && firstData.message === 'welcome'
+    && ((await txt(page, '.form-msg.success')) || '').includes('Welcome'));
+  const duplicateSubscribe = newsletterResponse();
+  await type(page, '.newsletter-row input', newsletterEmail);
   await smartClick(page, '.newsletter-row button');
+  const duplicateResponse = await duplicateSubscribe;
+  const duplicateData = await duplicateResponse.json();
   await sleep(300);
-  ok('newsletter: duplicate detected', ((await txt(page, '.form-msg.info')) || '').includes('already'));
-  ok('newsletter: persisted', ((await lsGet(page, 'mv-newsletter')) || '').includes('test@stock.com'));
+  ok('newsletter: duplicate detected', duplicateResponse.status() === 200 && duplicateData.message === 'already'
+    && ((await txt(page, '.form-msg.info')) || '').includes('already'));
+  ok('newsletter: persisted in D1', firstResponse.status() === 201 && duplicateResponse.status() === 200);
 
   // ---- 404 ----
   await go(page, '/no-such-page');

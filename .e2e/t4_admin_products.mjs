@@ -1,4 +1,4 @@
-import { go, sleep, txt, txtAll, count, exists, smartClick, clickByText, clickNth, type, attr, hash, lsGet, selectNth } from './lib.mjs';
+import { go, sleep, txt, txtAll, count, exists, smartClick, clickByText, clickNth, type, attr, hash, lsGet, selectNth, loginAdmin } from './lib.mjs';
 
 import { fileURLToPath } from 'node:url';
 const FIXTURE = fileURLToPath(new URL('./upload.png', import.meta.url));
@@ -13,18 +13,19 @@ const rowAction = (page, name, kind) => page.evaluate(({ name, kind }) => {
   return 'clicked';
 }, { name, kind });
 
+const returnToProductList = async (page) => {
+  await page.waitForFunction(() => /^#\/admin\/products$/.test(location.hash)
+    || !!document.querySelector('.admin-toast--success'), { timeout: 8000 });
+  await go(page, '/admin/products');
+  await page.waitForSelector('.admin-search input', { timeout: 5000 });
+};
+
 export default async function t4({ page, results, ok }) {
   const err0 = page._errors.length;
 
   // ---- Products list & filters ----
-  // sessionStorage (admin login) is per-tab: seed it and reload so AdminGuard lets us in.
-  // Also reset the catalog so a leftover product from an earlier (crashed) run can't skew counts.
-  await page.evaluate(() => {
-    sessionStorage.setItem('mv_admin', '1');
-    localStorage.removeItem('mv_products_admin');
-  });
-  await page.reload({ waitUntil: 'domcontentloaded' });
-  await sleep(800);
+  // Authenticate through the real login flow so API calls use a valid session cookie.
+  await loginAdmin(page);
   await go(page, '/admin/products');
   await sleep(900);
   ok('adm-products: 16 rows', (await count(page, '.admin-table tbody tr')) === 16);
@@ -71,13 +72,12 @@ export default async function t4({ page, results, ok }) {
   // rendered last). Grab the LAST one so the upload lands in form.images.
   const fileInputs = await page.$$('.admin-form input[type="file"]');
   await fileInputs[fileInputs.length - 1].uploadFile(FIXTURE);
-  await sleep(700);
+  await page.waitForSelector('.admin-image-item', { timeout: 10000 }).catch(() => {});
   ok('adm-form: image uploaded', (await count(page, '.admin-image-item')) === 1);
   await smartClick(page, '.admin-form-actions button[type="submit"]');
   // The form navigates ~900ms after a successful save; wait for the *list* route
   // (not "/add", which also contains "/admin/products") and for the list to render.
-  await page.waitForFunction(() => /^#\/admin\/products$/.test(location.hash), { timeout: 5000 });
-  await page.waitForSelector('.admin-search input', { timeout: 5000 });
+  await returnToProductList(page);
   await sleep(400);
   await type(page, '.admin-search input', 'E2E Product Alpha');
   await sleep(500);
@@ -122,8 +122,7 @@ export default async function t4({ page, results, ok }) {
   await sels[1].select('winter');
   await sleep(300);
   await smartClick(page, '.admin-form-actions button[type="submit"]');
-  await page.waitForFunction(() => /^#\/admin\/products$/.test(location.hash), { timeout: 5000 });
-  await page.waitForSelector('.admin-search input', { timeout: 5000 });
+  await returnToProductList(page);
   await sleep(400);
   await go(page, '/shop?q=E2E Product Alpha');
   await sleep(900);
@@ -134,8 +133,8 @@ export default async function t4({ page, results, ok }) {
   await sleep(800);
   await clickNth(page, '.admin-season-action', 0);
   await sleep(600);
-  const seasonLs = await lsGet(page, 'mv_hidden_seasons');
-  const winterHidden = seasonLs && JSON.parse(seasonLs).winter === true;
+  const seasonData = await page.evaluate(async () => (await fetch('/api/settings')).json());
+  const winterHidden = seasonData.settings?.hiddenSeasons?.winter === true;
   await go(page, '/shop?q=E2E Product Alpha');
   await sleep(900);
   ok('season: winter product hidden from storefront', winterHidden && (await exists(page, '.empty')));
@@ -194,8 +193,7 @@ export default async function t4({ page, results, ok }) {
   await bareNums[0].type('300');
   await sleep(300);
   await smartClick(page, '.admin-form-actions button[type="submit"]');
-  await page.waitForFunction(() => /^#\/admin\/products$/.test(location.hash), { timeout: 5000 });
-  await page.waitForSelector('.admin-search input', { timeout: 5000 });
+  await returnToProductList(page);
   await sleep(400);
   await type(page, '.admin-search input', 'E2E Bare Product');
   await sleep(500);

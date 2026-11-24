@@ -1,12 +1,24 @@
 import puppeteer from 'puppeteer-core';
 
-export const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
+export const BROWSER = process.env.E2E_BROWSER || 'chrome';
+export const BROWSER_PATH = process.env.E2E_BROWSER_PATH || (BROWSER === 'firefox'
+  ? 'C:/Program Files/Mozilla Firefox/firefox.exe'
+  : 'C:/Program Files/Google/Chrome/Application/chrome.exe');
 export const BASE = 'http://127.0.0.1:5199/#';
 export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+async function navigate(page, url) {
+  try {
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 2000 });
+  } catch (error) {
+    const loaded = await page.evaluate(() => document.readyState !== 'loading').catch(() => false);
+    if (!loaded || !page.url().startsWith(url.split('#')[0])) throw error;
+  }
+}
+
 export async function pageIn(browser) {
   const page = await browser.newPage();
-  await page.setViewport({ width: 1366, height: 1000 });
+  await page.setViewport({ width: 1366, height: 1000 }).catch(() => {});
   await page.setDefaultTimeout(10000);
   page._errors = [];
   page.on('console', (m) => { if (m.type() === 'error') page._errors.push(m.text()); });
@@ -17,7 +29,8 @@ export async function pageIn(browser) {
 
 export async function setup() {
   const browser = await puppeteer.launch({
-    executablePath: CHROME,
+    browser: BROWSER,
+    executablePath: BROWSER_PATH,
     headless: true,
     args: ['--disable-gpu', '--window-size=1366,1000'],
   });
@@ -38,17 +51,38 @@ export const hash = (page) => page.evaluate(() => location.hash);
 
 // Navigates to the app root first (so there is a real origin), then forces English
 export async function ensureEnglish(page) {
-  await page.goto(BASE + '/', { waitUntil: 'domcontentloaded' });
+  await navigate(page, BASE + '/');
   await page.waitForFunction(() => !document.querySelector('.splash'), { timeout: 8000 }).catch(() => {});
   await page.evaluate(() => localStorage.setItem('mv-lang', 'en'));
-  await page.reload({ waitUntil: 'domcontentloaded' });
+  try { await page.reload({ waitUntil: 'domcontentloaded', timeout: 2000 }); }
+  catch (error) {
+    if (!(await page.evaluate(() => document.readyState !== 'loading').catch(() => false))) throw error;
+  }
   await page.waitForFunction(() => !document.querySelector('.splash'), { timeout: 8000 }).catch(() => {});
   await sleep(500);
 }
 
+// Credentials are supplied by the local runner environment, never hard-coded.
+export async function loginAdmin(page) {
+  const email = process.env.E2E_ADMIN_EMAIL?.trim();
+  const password = process.env.E2E_ADMIN_PASSWORD;
+  if (!email || !password) throw new Error('E2E_ADMIN_EMAIL and E2E_ADMIN_PASSWORD are required');
+  await go(page, '/admin');
+  if (!(await exists(page, '#admin-email'))) {
+    if ((await hash(page)).endsWith('/admin')) return email;
+    await go(page, '/admin/login');
+  }
+  await type(page, '#admin-email', email);
+  await type(page, '#admin-password', password);
+  await smartClick(page, '.admin-login-submit');
+  await page.waitForFunction(() => location.hash.endsWith('/admin'), { timeout: 6000 });
+  await sleep(400);
+  return email;
+}
+
 export async function go(page, route, wait = 700) {
   if (!page.url().startsWith('http')) {
-    await page.goto(BASE + '/', { waitUntil: 'domcontentloaded' });
+    await navigate(page, BASE + '/');
     await page.waitForFunction(() => !document.querySelector('.splash'), { timeout: 8000 }).catch(() => {});
   }
   await page.evaluate((h) => { location.hash = h; }, route);

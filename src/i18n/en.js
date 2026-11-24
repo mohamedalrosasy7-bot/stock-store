@@ -351,6 +351,8 @@ export default {
     productNotFound: 'Product not found.',
     backToProducts: 'Back to Products',
     productSaved: 'Product saved! Redirecting…',
+    productSaveFailed: 'Could not save the product. Check your connection and try again.',
+    productSaveTimedOut: 'Saving took too long. Check your connection and retry.',
     editProduct: 'Edit Product',
     addProduct: 'Add Product',
     updateDetails: 'Update product details',

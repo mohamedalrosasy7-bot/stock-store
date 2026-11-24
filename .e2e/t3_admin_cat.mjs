@@ -1,4 +1,4 @@
-import { go, sleep, txt, txtAll, count, exists, smartClick, clickByText, clickNth, type, attr, hash, lsGet } from './lib.mjs';
+import { go, sleep, txt, txtAll, count, exists, smartClick, clickByText, clickNth, type, attr, hash, loginAdmin } from './lib.mjs';
 import { fileURLToPath } from 'node:url';
 
 const FIXTURE = fileURLToPath(new URL('./upload.png', import.meta.url));
@@ -13,15 +13,12 @@ export default async function t3({ page, results, ok }) {
 
   // ---- Login page ----
   ok('login: back-to-store link', await exists(page, '.admin-login-back'));
-  await type(page, '#admin-username', 'admin');
+  await type(page, '#admin-email', process.env.E2E_ADMIN_EMAIL || '');
   await type(page, '#admin-password', 'wrongpass');
   await smartClick(page, '.admin-login-submit');
   await sleep(500);
   ok('login: wrong password error', await exists(page, '.admin-error'));
-  await type(page, '#admin-password', 'admin123');
-  await smartClick(page, '.admin-login-submit');
-  await page.waitForFunction(() => location.hash.endsWith('/admin'), { timeout: 6000 });
-  await sleep(800);
+  await loginAdmin(page);
   ok('login: success -> dashboard', (await hash(page)) === '#/admin');
   ok('dashboard: 4 stat cards', (await count(page, '.admin-stat')) === 4);
   ok('dashboard: stats show 16 products', ((await txtAll(page, '.admin-stat-value')) || [])[0] === '16');
@@ -41,7 +38,8 @@ export default async function t3({ page, results, ok }) {
   await sleep(800);
   ok('cat: added -> 6 cards', (await count(page, '.admin-category-card')) === 6);
   ok('cat: success toast', await exists(page, '.admin-toast--success'));
-  ok('cat: persisted in localStorage', ((await lsGet(page, 'mv_categories_admin')) || '').includes('e2e-cat'));
+  const categoryData = await page.evaluate(async () => (await fetch('/api/categories')).json());
+  ok('cat: persisted in D1', categoryData.categories?.some((category) => category.id === 'e2e-cat'));
 
   // storefront reflects new category
   await go(page, '/');

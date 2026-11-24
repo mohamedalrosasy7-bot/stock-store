@@ -2,7 +2,7 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAdmin } from '../context/AdminContext';
 import { useLang } from '../context/LangContext';
-import { SEASONS, getCategoryName, normalizeSeason } from '../data/products';
+import { SEASONS, getCategoryName, normalizeSeason, productImages } from '../data/products';
 import { uploadStoreImage, isAllowedImage, purgeCloudinaryImages } from '../lib/images';
 import { deleteImage } from '../lib/api';
 import { money } from '../config';
@@ -44,6 +44,7 @@ export default function AdminProductForm() {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState('');
   const [customSize, setCustomSize] = useState('');
 
   useEffect(() => {
@@ -97,10 +98,11 @@ export default function AdminProductForm() {
     return Object.keys(e).length === 0;
   };
 
-  const handleSubmit = (ev) => {
+  const handleSubmit = async (ev) => {
     ev.preventDefault();
-    if (!validate()) return;
+    if (loading || !validate()) return;
     setLoading(true);
+    setSaveError('');
     const slug = form.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-' + Date.now().toString(36);
     const payload = {
       id: isEdit ? existing.id : slug,
@@ -121,16 +123,23 @@ export default function AdminProductForm() {
       isNew: isEdit ? existing.isNew : true,
       createdAt: isEdit ? existing.createdAt : Date.now(),
     };
-    if (isEdit) updateProduct(existing.id, payload);
-    else addProduct(payload);
-    // Best-effort cleanup of images the admin removed while editing but that
-    // are no longer referenced anywhere in the saved document.
-    purgeCloudinaryImages(
-      productImages(existing || {}).filter((src) => !productImages(payload).includes(src))
-    ).catch(() => {});
-    setSaved(true);
-    setLoading(false);
-    setTimeout(() => navigate('/admin/products'), 900);
+    try {
+      if (isEdit) await updateProduct(existing.id, payload);
+      else await addProduct(payload);
+      // Best-effort cleanup of images the admin removed while editing but that
+      // are no longer referenced anywhere in the saved document.
+      purgeCloudinaryImages(
+        productImages(existing || {}).filter((src) => !productImages(payload).includes(src))
+      ).catch(() => {});
+      setSaved(true);
+      setTimeout(() => navigate('/admin/products'), 900);
+    } catch (error) {
+      setSaveError(error?.message === 'Request timed out. Please check your connection and try again.'
+        ? t('admin.productSaveTimedOut')
+        : `${t('admin.productSaveFailed')}${error?.message ? ` (${error.message})` : ''}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Default name is unique ("New Color", "New Color 2", ...) so a fresh row
@@ -254,6 +263,7 @@ export default function AdminProductForm() {
       </div>
 
       <form className="admin-card admin-form" onSubmit={handleSubmit} noValidate>
+        {saveError && <p className="admin-field-error" role="alert">{saveError}</p>}
         <div className="admin-form-grid">
           <div className="admin-field full">
             <label>{t('admin.productName')}</label>

@@ -196,23 +196,32 @@ export function AdminProvider({ children }) {
     api('/api/auth/logout', { method: 'POST' }).catch(() => {});
   }, []);
 
-  const addProduct = useCallback((product) => {
-    setProducts((prev) => [product, ...prev]);
-    setStatus('success');
-    setStatusMsg('admin.toastProductCreated');
-    api('/api/products', { method: 'POST', body: product })
-      .catch(apiError);
-    return true;
+  const addProduct = useCallback(async (product) => {
+    try {
+      const data = await api('/api/products', { method: 'POST', body: product });
+      setProducts((prev) => [data.product || product, ...prev]);
+      setStatus('success');
+      setStatusMsg('admin.toastProductCreated');
+      return data.product || product;
+    } catch (error) {
+      apiError(error);
+      throw error;
+    }
   }, [apiError]);
 
-  const updateProduct = useCallback((id, updated) => {
+  const updateProduct = useCallback(async (id, updated) => {
     const prev = products.find((p) => p.id === id) || {};
-    setProducts((list) => list.map((p) => (p.id === id ? { ...p, ...updated } : p)));
-    setStatus('success');
-    setStatusMsg('admin.toastProductSaved');
-    api(`/api/products/${id}`, { method: 'PUT', body: { ...prev, ...updated, id } })
-      .catch(apiError);
-    return true;
+    try {
+      const data = await api(`/api/products/${id}`, { method: 'PUT', body: { ...prev, ...updated, id } });
+      const saved = data.product || { ...prev, ...updated, id };
+      setProducts((list) => list.map((p) => (p.id === id ? saved : p)));
+      setStatus('success');
+      setStatusMsg('admin.toastProductSaved');
+      return saved;
+    } catch (error) {
+      apiError(error);
+      throw error;
+    }
   }, [products, apiError]);
 
   const deleteProduct = useCallback((id) => {
