@@ -24,13 +24,15 @@ export const buildWhatsAppLink = (order, t) => {
 
 export default function AdminOrders() {
   const { t, lang } = useLang();
-  const { orders, removeOrder, updateOrderStatus } = useOrders();
+  const { orders, removeOrder, updateOrderStatus, refresh } = useOrders();
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   // Full-size image preview (lightbox) — opened by clicking an item thumbnail.
   const [preview, setPreview] = useState(null);
 
   // Close the lightbox on Escape / body scroll lock while it is open.
+  useEffect(() => { refresh(); }, [refresh]);
+
   useEffect(() => {
     if (!preview) return undefined;
     const onKey = (e) => { if (e.key === 'Escape') setPreview(null); };

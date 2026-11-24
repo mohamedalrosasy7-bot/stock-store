@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { api } from '../lib/api';
+import { useAdmin } from './AdminContext';
 
 // Orders live in D1 behind /api/orders. This context keeps the same public
 // API (orders / addOrder / removeOrder / updateOrderStatus) the admin pages
@@ -7,6 +8,7 @@ import { api } from '../lib/api';
 const OrdersContext = createContext(null);
 
 export function OrdersProvider({ children }) {
+  const { isLoggedIn } = useAdmin();
   const [orders, setOrders] = useState([]);
 
   const refresh = useCallback(async () => {
@@ -18,8 +20,8 @@ export function OrdersProvider({ children }) {
     }
   }, []);
 
-  // Load once on mount; admin pages re-fetch via refresh() when opened.
-  useEffect(() => { refresh(); }, [refresh]);
+  // Load after login as well as on mount. The initial guest request is 401.
+  useEffect(() => { if (isLoggedIn) refresh(); }, [isLoggedIn, refresh]);
 
   const addOrder = useCallback(async (order) => {
     const payload = {
@@ -31,7 +33,7 @@ export function OrdersProvider({ children }) {
         note: order.customer.notes,
       },
       payment: order.payment,
-      items: order.items.map((it) => ({ id: it.id, qty: it.qty, size: it.size, color: it.color })),
+      items: order.items.map((it) => ({ id: it.id, qty: it.qty, size: it.size, color: it.color, image: it.image })),
     };
     const data = await api('/api/orders', { method: 'POST', body: payload });
     setOrders((prev) => [data.order, ...prev]);
@@ -57,8 +59,8 @@ export function OrdersProvider({ children }) {
   }, [refresh]);
 
   const value = useMemo(
-    () => ({ orders, addOrder, removeOrder, updateOrderStatus }),
-    [orders, addOrder, removeOrder, updateOrderStatus]
+    () => ({ orders, addOrder, removeOrder, updateOrderStatus, refresh }),
+    [orders, addOrder, removeOrder, updateOrderStatus, refresh]
   );
 
   return <OrdersContext.Provider value={value}>{children}</OrdersContext.Provider>;

@@ -35,7 +35,7 @@ export default function Cart() {
     );
   }
 
-  const remaining = subtotal > STORE.freeShippingThreshold ? 0 : STORE.freeShippingThreshold - subtotal + 1;
+  const remaining = subtotal >= STORE.freeShippingThreshold ? 0 : STORE.freeShippingThreshold - subtotal;
   const freeShippingProgress = Math.min(100, Math.max(0, (subtotal / STORE.freeShippingThreshold) * 100));
 
   return (

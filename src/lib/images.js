@@ -47,9 +47,11 @@ export async function uploadStoreImage(file) {
     const data = await uploadImage(prepared);
     return data.url;
   } catch {
-    // Cloudinary not configured (local dev / E2E without secrets): keep the
-    // image working via a local data URL so the pickers stay functional.
-    return readFileAsDataUrl(prepared);
+    // Keep local development usable without Cloudflare/Cloudinary. In a
+    // production build, surface upload errors instead of storing large base64
+    // blobs in D1 when the image service is misconfigured or unavailable.
+    if (import.meta.env.DEV) return readFileAsDataUrl(prepared);
+    throw new Error('Image upload failed. Check the Cloudinary configuration and try again.');
   }
 }
 

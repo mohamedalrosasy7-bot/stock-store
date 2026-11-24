@@ -34,7 +34,7 @@ export default function Checkout() {
   const toast = useToast();
   const placed = useRef(false);
   const [form, setForm] = useState({ fullName: '', phone: '', address: '', city: '', notes: '', payment: 'cod' });
-  const remaining = subtotal > STORE.freeShippingThreshold ? 0 : STORE.freeShippingThreshold - subtotal + 1;
+  const remaining = subtotal >= STORE.freeShippingThreshold ? 0 : STORE.freeShippingThreshold - subtotal;
   const freeShippingProgress = Math.min(100, Math.max(0, (subtotal / STORE.freeShippingThreshold) * 100));
   const [errors, setErrors] = useState({});
   const [placing, setPlacing] = useState(false);

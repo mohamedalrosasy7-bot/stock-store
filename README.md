@@ -1,42 +1,39 @@
-# MAISON VERA — Premium Clothing Store
+# STOCK STORE
 
-A complete e-commerce front end built with React 18, React Router 6 and Vite. Plain modern CSS (variables, grid, no framework).
+React storefront built with Vite and Cloudflare Pages Functions. Product, category, ad, settings, order, and newsletter data are stored in Cloudflare D1. Product images are uploaded through the Functions API to Cloudinary.
 
-## Live demo
+## Local development
 
-https://01128567476.github.io/stock-store/
-
-> Hosted on GitHub Pages. Page URLs use hash routing (for example `/#/shop`) so direct links work on static hosting.
-
-## Run locally
-
-Requires Node.js 18+.
+Requires Node.js 20.19+ and npm.
 
 ```bash
-cd maison-vera
 npm install
-npm run dev        # http://localhost:5173
+Copy-Item .dev.vars.example .dev.vars
+# Replace the example values in .dev.vars with local development values.
+npm run build
+npx wrangler pages dev dist --compatibility-date=2024-09-23
 ```
 
-Production build: `npm run build` then `npm run preview`.
+`npm run dev` starts Vite only; it does not run the `/api/*` Pages Functions. Use `wrangler pages dev` when working on the API or admin persistence. Configure a local D1 database binding in `wrangler.toml` before using the Functions locally.
 
-## Configure
+## Cloudflare backend setup
 
-Edit `src/config.js`: store name, currency, **WhatsApp number**, contact details, shipping fee / free-shipping threshold, social links.
-Edit `src/data/products.js` to change products, prices, colors, sizes and images.
+1. Create a D1 database named `stock-store-db`, then put its ID in `wrangler.toml` under the `DB` binding.
+2. Apply `schema.sql` to the database and initialize the starter settings/categories with `node scripts/seed.mjs --remote` after setting the intended environment values.
+3. Create a Cloudflare Pages project named `stock-store` and connect this repository or deploy it with Wrangler. GitHub Pages serves static files only and cannot run the Functions in `functions/`.
+4. In Cloudflare Pages, bind D1 as `DB`. Add the runtime secrets `SESSION_SECRET`, `CLOUDINARY_API_KEY`, and `CLOUDINARY_API_SECRET`, plus the variable `CLOUDINARY_CLOUD_NAME`.
+5. Set `VITE_CLOUDINARY_CLOUD_NAME` in the Pages build environment so the browser can generate optimized Cloudinary URLs.
 
-## Features
+The repository's current GitHub Pages workflow publishes the frontend but does not deploy a backend runtime. The Cloudflare account, D1 database ID, and Cloudinary credentials still need to be supplied before production orders, admin changes, and image uploads can persist.
 
-- Home: hero ("WEAR YOUR STYLE"), categories, featured, new arrivals, offers, best sellers, sale, reviews, newsletter
-- Shop: search, category filter, price min/max, sale-only, sorting (filters live in the URL, so links are shareable)
-- Product page: gallery, color / size / quantity, Add to Cart, Buy Now, wishlist, related products
-- Cart: add / remove / quantity, auto totals, free-shipping logic, persisted in localStorage
-- Checkout: validated form, Cash on Delivery, order summary, confirmation page (orders saved in localStorage `mv-orders`)
-- Wishlist, dark / light mode, WhatsApp button, newsletter, discount badges, splash + route loaders, page transitions
-- SEO: per-page titles and descriptions, Open Graph tags, JSON-LD, robots.txt, lazy-loaded routes and images
+## Store configuration
+
+Edit `src/config.js` for the store name, currency, WhatsApp number, contact details, delivery fee and free-delivery threshold. The API independently recalculates order prices and delivery charges; keep its delivery values in `functions/api/orders/index.js` aligned with the storefront settings.
+
+Edit `src/data/products.js` for the fallback catalog. The remote D1 catalog is the source of truth when the API is available. `scripts/seed.mjs` initializes categories and settings; it intentionally does not import the fallback product catalog.
 
 ## Notes
 
-- There is no backend: orders and newsletter emails are stored in the browser's localStorage. To receive real orders, send the `order` object in `src/pages/Checkout.jsx` to your API (or an email / Google Sheets webhook).
-- Product photos are hot-linked from Unsplash. Any image that fails to load shows an elegant placeholder. Replace with your own photos for production.
-- SEO note: this is a client-rendered SPA. For full search-engine indexing of product pages, add prerendering or move to Next.js later.
+- Admin sessions use signed, HTTP-only cookies. Set `SESSION_SECRET` to a random value of at least 32 characters.
+- Never commit `.dev.vars` or Cloudinary credentials. `.dev.vars.example` contains placeholders only.
+- The application is a client-rendered SPA. Product photos in the fallback catalog are linked from Unsplash.

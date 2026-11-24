@@ -43,9 +43,11 @@ const bytesToHex = (b) => [...b].map((x) => x.toString(16).padStart(2, '0')).joi
 // --- Signed session cookie (HMAC-SHA256) ---
 // Value format: base64url(payload).base64url(hmac)
 export const COOKIE_NAME = 'mv_session';
+const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 export async function newSessionToken(env, { sub, email }) {
-  const payload = { sub, email, iat: Date.now() };
+  const iat = Date.now();
+  const payload = { sub, email, iat, exp: iat + SESSION_TTL_MS };
   const b64 = base64url(JSON.stringify(payload));
   const sig = await hmac(env, b64);
   return `${b64}.${sig}`;
@@ -61,15 +63,21 @@ export async function verifySession(env, token) {
   for (let i = 0; i < expected.length; i++) diff |= sig.charCodeAt(i) ^ expected.charCodeAt(i);
   if (diff !== 0) return null;
   try {
-    return JSON.parse(new TextDecoder().decode(base64urlDecode(b64)));
+    const payload = JSON.parse(new TextDecoder().decode(base64urlDecode(b64)));
+    if (!Number.isFinite(payload.exp) || Date.now() >= payload.exp) return null;
+    return payload;
   } catch {
     return null;
   }
 }
 
 async function hmac(env, data) {
-  // SESSION_SECRET must be set via `wrangler secret` in production.
-  const secret = (env && env.SESSION_SECRET) || 'dev-only-secret';
+  // SESSION_SECRET must be set via `wrangler secret` in production and in
+  // .dev.vars locally. Never issue production sessions with a public fallback.
+  const secret = env && env.SESSION_SECRET;
+  if (typeof secret !== 'string' || secret.length < 32) {
+    throw new Error('SESSION_SECRET must be configured with at least 32 characters.');
+  }
   const key = await crypto.subtle.importKey('raw', encoder.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
   const sig = await crypto.subtle.sign('HMAC', key, encoder.encode(data));
   return base64url(new Uint8Array(sig));

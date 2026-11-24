@@ -58,7 +58,7 @@ export function CartProvider({ children }) {
       .map((l) => ({ ...l, unit: effectivePrice(l.product), total: effectivePrice(l.product) * l.qty }));
     const count = lines.reduce((s, l) => s + l.qty, 0);
     const subtotal = lines.reduce((s, l) => s + l.total, 0);
-    const shipping = subtotal === 0 || subtotal > STORE.freeShippingThreshold ? 0 : STORE.shippingFee;
+    const shipping = subtotal === 0 || subtotal >= STORE.freeShippingThreshold ? 0 : STORE.shippingFee;
     return { lines, count, subtotal, shipping, total: subtotal + shipping, addItem, removeItem, setQty, clear, MAX_QTY };
   }, [items, products, addItem, removeItem, setQty, clear]);
 
