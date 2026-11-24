@@ -2,7 +2,7 @@
 import { Link } from 'react-router-dom';
 import { useAdmin } from '../context/AdminContext';
 import { useLang } from '../context/LangContext';
-import { SEASONS, coverImage, getCategoryName, normalizeSeason } from '../data/products';
+import { SEASONS, coverImage, getCategoryName, normalizeSeason, sortByNewest } from '../data/products';
 import { money } from '../config';
 import { EditIcon, TrashIcon, EyeIcon, EyeOffIcon, PlusIcon, SearchIcon } from '../components/Icons';
 
@@ -21,7 +21,7 @@ export default function AdminProducts() {
   const [category, setCategory] = useState('all');
   const [saleOnly, setSaleOnly] = useState(false);
   const [season, setSeason] = useState('all');
-  const [sortBy, setSortBy] = useState('name-asc');
+  const [sortBy, setSortBy] = useState('newest');
   const [confirmId, setConfirmId] = useState(null);
 
   const catLabel = (id) => {
@@ -44,12 +44,12 @@ export default function AdminProducts() {
       const matchS = season === 'all' || normalizeSeason(p.season) === season;
       return matchQ && matchC && matchSale && matchS;
     });
+    if (sortBy === 'newest') return sortByNewest(list);
     return [...list].sort((a, b) => {
       switch (sortBy) {
         case 'name-desc': return b.name.localeCompare(a.name);
         case 'price-asc': return (a.salePrice ?? a.price) - (b.salePrice ?? b.price);
         case 'price-desc': return (b.salePrice ?? b.price) - (a.salePrice ?? a.price);
-        case 'newest': return b.id.localeCompare(a.id);
         default: return a.name.localeCompare(b.name);
       }
     });

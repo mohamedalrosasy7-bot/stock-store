@@ -7,7 +7,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useLang } from '../context/LangContext';
 import { useAdmin } from '../context/AdminContext';
 import { getCategoryName } from '../data/products';
-import { BagIcon, HeartIcon, HomeIcon, MoonIcon, SearchIcon, ShieldIcon, SunIcon } from './Icons';
+import { BagIcon, HeartIcon, HomeIcon, MoonIcon, SearchIcon, SunIcon } from './Icons';
 import LanguageToggle from './LanguageToggle';
 
 const LINKS = [
@@ -72,9 +72,6 @@ export default function Navbar() {
               </Link>
             );
           })}
-          <Link to="/admin" className="admin-nav-link">
-            <ShieldIcon size={16} /> {t('nav.admin')}
-          </Link>
         </nav>
 
         <div className="nav-actions">

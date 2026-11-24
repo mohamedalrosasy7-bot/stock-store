@@ -60,9 +60,6 @@ export default function Home() {
             <Link to="/shop?sort=newest" className="btn btn-ghost btn-lg">
               {t('hero.newArrivals')}
             </Link>
-            <Link to="/admin/login" className="btn btn-sm btn-ghost admin-mobile-link">
-              {t('nav.admin')}
-            </Link>
           </div>
         </div>
         <div className="hero-media">
