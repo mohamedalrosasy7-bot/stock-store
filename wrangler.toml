@@ -3,12 +3,12 @@ compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
 pages_build_output_dir = "./dist"
 
-# Database binding: run `npx wrangler d1 create stock-store-db` and put the id below.
+# Database binding for the production Cloudflare Pages deployment.
 
 [[d1_databases]]
 binding = "DB"
 database_name = "stock-store-db"
-database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+database_id = "b2208052-a6e1-463d-8f3e-482f351ade6e"
 
 [vars]
 # Public, safe to commit. Secrets live in Cloudflare dashboard / .dev.vars.
