@@ -4,6 +4,6 @@ import { requireAdmin } from '../../_lib/auth.js';
 
 export async function onRequestGet(context) {
   const admin = await requireAdmin(context);
-  if (!admin) return json({ admin: null }, { status: 401 });
+  if (!admin) return json({ admin: null });
   return json({ admin: { email: admin.email } });
 }

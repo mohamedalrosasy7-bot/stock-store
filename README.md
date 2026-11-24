@@ -14,7 +14,7 @@ npm run build
 npx wrangler pages dev dist --compatibility-date=2024-09-23
 ```
 
-`npm run dev` starts Vite only; it does not run the `/api/*` Pages Functions. Use `wrangler pages dev` when working on the API or admin persistence. Configure a local D1 database binding in `wrangler.toml` before using the Functions locally.
+Run the command above in one terminal; Pages Functions listen on port `8788`. In a second terminal, run `npm run dev` to serve the Vite frontend on port `5173`; Vite proxies `/api/*` to the Pages Functions server. The local D1 database needs the schema once: `npx wrangler d1 execute stock-store-db --local --file=schema.sql`. `npm run dev` by itself does not run the API.
 
 ## Production deployment status
 
@@ -22,7 +22,7 @@ The production storefront is deployed at <https://stock-store.pages.dev> using C
 
 Cloudflare Pages production secrets are configured for `SESSION_SECRET`, `CLOUDINARY_UPLOAD_PRESET`, `CLOUDINARY_API_KEY`, and `CLOUDINARY_API_SECRET`. The public Cloudinary cloud name is in `wrangler.toml`. Uploads use the unsigned preset through the authenticated Pages Function; image deletion uses the signed Cloudinary API.
 
-No admin user has been created. Admin sign-in and protected admin actions will remain unavailable until the owner creates the first admin account and password. The initial admin setup is intentionally kept out of the sample catalog seed script.
+Two admin accounts are configured in production D1. Passwords are stored as salted PBKDF2 hashes and are not included in the repository or deployment files. The initial admin setup is intentionally kept out of the sample catalog seed script.
 
 The site was deployed directly with Wrangler. To enable future GitHub Actions deployments, add `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` as repository secrets, then set the repository variable `CLOUDFLARE_DEPLOY_ENABLED` to `true`. The workflow stays paused until that variable is enabled. The storefront's Cloudinary cloud name can be overridden with the optional variable `VITE_CLOUDINARY_CLOUD_NAME`.
 

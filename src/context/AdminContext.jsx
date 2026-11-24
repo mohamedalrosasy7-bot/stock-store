@@ -98,10 +98,10 @@ export function AdminProvider({ children }) {
     let alive = true;
     (async () => {
       try {
-        const me = await api('/api/auth/me').catch(() => ({ admin: null }));
+        const me = await api('/api/auth/me').catch(() => null);
         if (!alive) return;
-        setIsLoggedIn(!!me.admin);
-        if (!me.admin) {
+        setIsLoggedIn(!!me?.admin);
+        if (!me?.admin) {
           try { sessionStorage.removeItem(ADMIN_KEY); } catch {}
         }
         await refreshStoreData();
