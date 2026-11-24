@@ -31,7 +31,7 @@ The Cloudflare account, D1 database ID, and Cloudinary credentials still need to
 
 Edit `src/config.js` for the store name, currency, WhatsApp number, contact details, delivery fee and free-delivery threshold. The API independently recalculates order prices and delivery charges; keep its delivery values in `functions/api/orders/index.js` aligned with the storefront settings.
 
-Edit `src/data/products.js` for the fallback catalog. The remote D1 catalog is the source of truth when the API is available. `scripts/seed.mjs` initializes categories and settings; it intentionally does not import the fallback product catalog.
+Edit `src/data/products.js` for the fallback catalog. The remote D1 catalog is the source of truth when the API is available. `scripts/seed.mjs` initializes categories and settings; it intentionally does not import the fallback product catalog. Data saved by older versions in a browser's localStorage is not automatically copied into D1.
 
 ## Notes
 

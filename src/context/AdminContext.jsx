@@ -2,8 +2,7 @@ import { createContext, useContext, useState, useCallback, useEffect } from 'rea
 import { CATEGORIES, IMAGES, PRODUCTS, normalizeSeason } from '../data/products';
 import { api } from '../lib/api';
 
-// Data now lives in D1 behind /api/*. localStorage keys are only kept to
-// migrate legacy data (one time) and as a cache for the offline case.
+// Catalog and admin settings persist through the D1-backed /api/* endpoints.
 const ADMIN_KEY = 'mv_admin';
 
 const DEFAULT_AD_BANNERS = [
@@ -39,8 +38,8 @@ const DEFAULT_AD_BANNERS = [
 // Admin identity lives in D1 (email + PBKDF2 hash). The signed session cookie
 // is issued by /api/auth/login — no client-side credentials anymore.
 
-// While the API loads (or when it is unreachable), the static catalog keeps
-// the storefront alive. This is the same list the seeder put into D1.
+// Fallback while the API loads or is unreachable. A fresh D1 catalog is empty
+// until the admin adds products or imports an initial catalog.
 const initialProducts = JSON.parse(JSON.stringify(PRODUCTS));
 
 const normalizeCategory = (category) => ({
@@ -69,11 +68,30 @@ export function AdminProvider({ children }) {
   const [hiddenSeasons, setHiddenSeasons] = useState({});
   const [loaded, setLoaded] = useState(false);
 
+  const refreshStoreData = useCallback(async () => {
+    const [catalog, catData, adsData, settingsData] = await Promise.all([
+      api('/api/products'),
+      api('/api/categories').catch(() => ({ categories: null })),
+      api('/api/ads').catch(() => null),
+      api('/api/settings').catch(() => ({ settings: null })),
+    ]);
+    setProducts(Array.isArray(catalog.products) ? catalog.products : []);
+    if (catData.categories?.length) setCategories(catData.categories.map(normalizeCategory));
+    if (adsData && Array.isArray(adsData.banners)) {
+      setShopAds({ enabled: adsData.enabled !== false, banners: adsData.banners });
+    }
+    setHiddenSeasons(settingsData?.settings?.hiddenSeasons || {});
+  }, []);
+
   const apiError = useCallback((e) => {
     console.error('API request failed:', e?.message);
     setStatus('error');
     setStatusMsg('admin.toastSaveFailed');
-  }, []);
+    // Reconcile optimistic UI changes with the server after a failed save.
+    refreshStoreData().catch((refreshError) => {
+      console.error('Unable to restore server data:', refreshError?.message);
+    });
+  }, [refreshStoreData]);
 
   // --- initial load from the server ---
   useEffect(() => {
@@ -86,21 +104,8 @@ export function AdminProvider({ children }) {
         if (!me.admin) {
           try { sessionStorage.removeItem(ADMIN_KEY); } catch {}
         }
-        const [catalog, catData, adsData, settingsData] = await Promise.all([
-          api('/api/products'),
-          api('/api/categories').catch(() => ({ categories: null })),
-          api('/api/ads').catch(() => null),
-          api('/api/settings').catch(() => ({ settings: null })),
-        ]);
+        await refreshStoreData();
         if (!alive) return;
-        setProducts(catalog.products || []);
-        if (catData.categories?.length) setCategories(catData.categories.map(normalizeCategory));
-        if (adsData && Array.isArray(adsData.banners)) {
-          setShopAds({ enabled: adsData.enabled !== false, banners: adsData.banners });
-        }
-        if (settingsData?.settings?.hiddenSeasons) {
-          setHiddenSeasons(settingsData.settings.hiddenSeasons);
-        }
       } catch (e) {
         console.error('Catalog load failed:', e?.message);
       } finally {
@@ -108,7 +113,7 @@ export function AdminProvider({ children }) {
       }
     })();
     return () => { alive = false; };
-  }, []);
+  }, [refreshStoreData]);
 
   const addCategory = useCallback((category) => {
     if (

@@ -16,6 +16,15 @@ export async function onRequestPut(context) {
   if (!(await requireAdmin(context))) return bad('Unauthorized.', 401);
   const body = await readJson(context.request);
   if (!body || typeof body !== 'object' || Array.isArray(body)) return bad('Expected a settings object.');
+  if (Object.keys(body).some((key) => key !== 'hiddenSeasons')) return bad('Unsupported setting.');
+  if (body.hiddenSeasons != null) {
+    const seasons = body.hiddenSeasons;
+    if (
+      typeof seasons !== 'object' || Array.isArray(seasons) ||
+      Object.keys(seasons).some((season) => !['winter', 'summer'].includes(season)) ||
+      Object.values(seasons).some((hidden) => typeof hidden !== 'boolean')
+    ) return bad('hiddenSeasons must contain boolean winter/summer values.');
+  }
 
   const stmt = context.env.DB.prepare(
     'INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value'

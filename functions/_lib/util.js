@@ -3,7 +3,11 @@
 export const json = (data, init = {}) =>
   new Response(JSON.stringify(data), {
     ...init,
-    headers: { 'content-type': 'application/json; charset=utf-8', ...(init.headers || {}) },
+    headers: {
+      'content-type': 'application/json; charset=utf-8',
+      'cache-control': 'no-store',
+      ...(init.headers || {}),
+    },
   });
 
 export const bad = (message, status = 400) => json({ error: message }, { status });

@@ -2,6 +2,7 @@
 // POST /api/categories — admin: add category
 import { json, bad, readJson } from '../../_lib/util.js';
 import { requireAdmin } from '../../_lib/auth.js';
+import { validateCategory } from '../../_lib/validation.js';
 
 export async function onRequestGet(context) {
   const { results } = await context.env.DB
@@ -13,7 +14,8 @@ export async function onRequestGet(context) {
 export async function onRequestPost(context) {
   if (!(await requireAdmin(context))) return bad('Unauthorized.', 401);
   const body = await readJson(context.request);
-  if (!body?.id || !body?.label || !body?.labelAr) return bad('id, label and labelAr are required.');
+  const validationError = validateCategory(body);
+  if (validationError) return bad(validationError);
 
   const exists = await context.env.DB.prepare('SELECT id FROM categories WHERE id = ?').bind(body.id).first();
   if (exists) return bad('A category with this id already exists.', 409);

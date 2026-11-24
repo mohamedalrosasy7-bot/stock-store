@@ -2,12 +2,14 @@
 // DELETE /api/categories/:id — admin
 import { json, bad, readJson } from '../../_lib/util.js';
 import { requireAdmin } from '../../_lib/auth.js';
+import { validateCategory } from '../../_lib/validation.js';
 
 export async function onRequestPut(context) {
   if (!(await requireAdmin(context))) return bad('Unauthorized.', 401);
   const id = context.params.id;
   const body = await readJson(context.request);
-  if (!body?.label || !body?.labelAr) return bad('label and labelAr are required.');
+  const validationError = validateCategory(body, { requireId: false });
+  if (validationError) return bad(validationError);
 
   const row = await context.env.DB.prepare('SELECT data FROM categories WHERE id = ?').bind(id).first();
   if (!row) return bad('Category not found.', 404);
@@ -33,6 +35,7 @@ export async function onRequestDelete(context) {
   const remaining = await context.env.DB.prepare('SELECT COUNT(*) AS n FROM categories').first();
   if ((remaining?.n || 0) <= 1) return bad('At least one category must remain.', 409);
 
-  await context.env.DB.prepare('DELETE FROM categories WHERE id = ?').bind(id).run();
+  const deleted = await context.env.DB.prepare('DELETE FROM categories WHERE id = ?').bind(id).run();
+  if (!deleted.meta?.changes) return bad('Category not found.', 404);
   return json({ ok: true });
 }

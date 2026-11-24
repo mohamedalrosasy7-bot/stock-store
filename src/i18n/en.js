@@ -254,6 +254,7 @@ export default {
     placeholder: 'Your email address',
     subscribe: 'Subscribe',
     invalidEmail: 'Please enter a valid email address.',
+    failed: 'We could not subscribe you right now. Please try again shortly.',
     already: 'You are already subscribed. Thank you!',
     welcome: 'Welcome to the list! Look out for our next drop.',
   },

@@ -2,6 +2,7 @@
 // POST /api/products       — admin: create product
 import { json, bad, readJson } from '../../_lib/util.js';
 import { requireAdmin } from '../../_lib/auth.js';
+import { validateProduct } from '../../_lib/validation.js';
 
 const slugify = (s) =>
   String(s || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || `p-${Date.now()}`;
@@ -16,7 +17,8 @@ export async function onRequestGet(context) {
 export async function onRequestPost(context) {
   if (!(await requireAdmin(context))) return bad('Unauthorized.', 401);
   const body = await readJson(context.request);
-  if (!body || !body.name) return bad('Name is required.');
+  const validationError = validateProduct(body);
+  if (validationError) return bad(validationError);
 
   let id = slugify(body.id || body.name);
   const taken = await context.env.DB.prepare('SELECT id FROM products WHERE id = ?').bind(id).first();

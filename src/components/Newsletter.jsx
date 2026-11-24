@@ -25,8 +25,8 @@ export default function Newsletter() {
       const data = await api('/api/newsletter', { method: 'POST', body: { email: value } });
       setEmail('');
       setMsg({ type: data.message === 'already' ? 'info' : 'success', key: `newsletter.${data.message}` });
-    } catch {
-      setMsg({ type: 'error', key: 'newsletter.invalidEmail' });
+    } catch (error) {
+      setMsg({ type: 'error', key: error.status === 400 ? 'newsletter.invalidEmail' : 'newsletter.failed' });
     } finally {
       setBusy(false);
     }
