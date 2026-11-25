@@ -6,6 +6,7 @@ import { useLang } from '../context/LangContext';
 import ProductImage from './ProductImage';
 import Price from './Price';
 import { BagIcon, HeartIcon } from './Icons';
+import { hasAvailableVariant } from '../data/variantAvailability';
 
 export default function ProductCard({ product }) {
   const { has, toggle } = useWishlist();
@@ -16,12 +17,7 @@ export default function ProductCard({ product }) {
   const wished = has(product.id);
   const link = `/product/${product.id}`;
   const soldOut = product.soldOut === true;
-  const soldOutSizes = product.soldOutSizes || [];
-  const soldOutColors = product.soldOutColors || [];
-  const noAvailableVariant =
-    soldOut ||
-    ((product.colors || []).every((color) => soldOutColors.includes(color.name))) ||
-    ((product.sizes || []).every((size) => soldOutSizes.includes(size)));
+  const noAvailableVariant = soldOut || !hasAvailableVariant(product);
 
   return (
     <article className={`card ${noAvailableVariant ? 'is-sold-out' : ''}`}>

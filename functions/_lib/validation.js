@@ -22,9 +22,42 @@ export function validateProduct(product) {
   )) {
     return 'Each color needs a valid hex color and image list.';
   }
+  for (const color of product.colors) {
+    if (color.sizes != null && (
+      !Array.isArray(color.sizes) ||
+      color.sizes.length > 50 ||
+      color.sizes.some((size) => typeof size !== 'string' || !size.trim() || size.length > 32) ||
+      new Set(color.sizes.map((size) => size.trim().toLowerCase())).size !== color.sizes.length
+    )) {
+      return 'Each color must have a valid, unique size list.';
+    }
+    if (color.soldOutSizes != null && (
+      !Array.isArray(color.soldOutSizes) ||
+      color.soldOutSizes.some((size) => typeof size !== 'string')
+    )) {
+      return 'Each color soldOutSizes must be a list of strings.';
+    }
+  }
   if (!Array.isArray(product.sizes) || product.sizes.length === 0 || product.sizes.length > 50) return 'Add between 1 and 50 sizes.';
   if (product.sizes.some((size) => typeof size !== 'string' || !size.trim() || size.length > 32)) return 'Each size must be a non-empty string of at most 32 characters.';
   if (new Set(product.sizes.map((size) => size.trim().toLowerCase())).size !== product.sizes.length) return 'Sizes must be unique.';
+  const productSizeSet = new Set(product.sizes.map((size) => size.trim().toLowerCase()));
+  if (product.colors.some((color) =>
+    Array.isArray(color.sizes) && color.sizes.some((size) => !productSizeSet.has(size.trim().toLowerCase()))
+  )) {
+    return 'Color sizes must be included in the product size list.';
+  }
+  if (product.colors.some((color) => {
+    const colorSizeSet = new Set(
+      (Array.isArray(color.sizes) ? color.sizes : product.sizes)
+        .map((size) => size.trim().toLowerCase())
+    );
+    return (color.soldOutSizes || []).some((size) =>
+      !colorSizeSet.has(size.trim().toLowerCase())
+    );
+  })) {
+    return 'Sold-out sizes must be available for that color.';
+  }
   for (const flag of ['active', 'soldOut', 'featured', 'isNew', 'bestSeller']) {
     if (product[flag] != null && typeof product[flag] !== 'boolean') return `${flag} must be a boolean.`;
   }
@@ -32,6 +65,14 @@ export function validateProduct(product) {
     if (product[list] != null && (!Array.isArray(product[list]) || product[list].some((item) => typeof item !== 'string'))) {
       return `${list} must be a list of strings.`;
     }
+  }
+  const soldOutColorNames = new Set((product.soldOutColors || []).map((name) => name.toLowerCase()));
+  if (product.colors.some((color) =>
+    Array.isArray(color.sizes) &&
+    color.sizes.length === 0 &&
+    !soldOutColorNames.has(color.name.trim().toLowerCase())
+  )) {
+    return 'Each available color must have at least one size.';
   }
   if (!Array.isArray(product.images) || product.images.length > 30 || product.images.some((image) => typeof image !== 'string')) {
     return 'Product images must be a list of at most 30 URLs.';

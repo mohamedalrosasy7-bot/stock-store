@@ -68,13 +68,31 @@ export async function onRequestPost(context) {
     if (!Number.isInteger(qty) || qty < 1 || qty > 10) return bad('Each quantity must be between 1 and 10.');
     const size = String(it.size || '').trim();
     const color = String(it.color || '').trim();
-    if (Array.isArray(product.sizes) && product.sizes.length && !product.sizes.includes(size)) {
+    if (Array.isArray(product.sizes) && product.sizes.length && !product.sizes.some((item) => item.toLowerCase() === size.toLowerCase())) {
       return bad(`The selected size for ${product.name} is unavailable.`, 409);
     }
-    if (Array.isArray(product.colors) && product.colors.length && !product.colors.some((c) => c.name === color)) {
+    const selectedColor = Array.isArray(product.colors)
+      ? product.colors.find((item) => item.name === color)
+      : null;
+    if (Array.isArray(product.colors) && product.colors.length && !selectedColor) {
       return bad(`The selected color for ${product.name} is unavailable.`, 409);
     }
-    if ((product.soldOutSizes || []).includes(size) || (product.soldOutColors || []).includes(color)) {
+    const hasColorSizes = Array.isArray(selectedColor?.sizes);
+    const colorSizes = hasColorSizes ? selectedColor.sizes : product.sizes;
+    const colorSoldOutSizes = Array.isArray(selectedColor?.soldOutSizes)
+      ? selectedColor.soldOutSizes
+      : (hasColorSizes ? [] : (product.soldOutSizes || []));
+    if (Array.isArray(colorSizes) && !colorSizes.some((item) => item.toLowerCase() === size.toLowerCase())) {
+      return bad(`The selected size for ${product.name} is unavailable in this color.`, 409);
+    }
+    if (
+      colorSoldOutSizes.some((item) => item.toLowerCase() === size.toLowerCase()) ||
+      (!hasColorSizes && (product.soldOutSizes || []).some((item) => item.toLowerCase() === size.toLowerCase())) ||
+      (product.soldOutColors || []).includes(color) ||
+      (colorSizes?.length && colorSizes.every((colorSize) =>
+        colorSoldOutSizes.some((item) => item.toLowerCase() === colorSize.toLowerCase())
+      ))
+    ) {
       return bad(`The selected variant for ${product.name} is sold out.`, 409);
     }
 

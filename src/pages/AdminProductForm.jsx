@@ -10,6 +10,15 @@ import { CloseIcon, ArrowIcon } from '../components/Icons';
 
 const LETTER_SIZE_OPTIONS = ['M', 'L', 'XL', '2XL', '3XL'];
 const NUMBER_SIZE_OPTIONS = ['30', '32', '34', '36', '38', '40'];
+const collectSizes = (colors) => {
+  const seen = new Set();
+  return colors.flatMap((color) => color.sizes || []).filter((size) => {
+    const key = size.toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+};
 
 export default function AdminProductForm() {
   const { t, lang } = useLang();
@@ -25,13 +34,11 @@ export default function AdminProductForm() {
 
   const [form, setForm] = useState({
     name: '', description: '', category: defaultCategory, price: '', discount: '',
-    colors: [{ name: 'Black', hex: '#141414', images: [] }],
-    sizes: [],
+    colors: [{ name: 'Black', hex: '#141414', images: [], sizes: [], soldOutSizes: [] }],
     images: [],
     active: true,
     soldOut: false,
     soldOutColors: [],
-    soldOutSizes: [],
     season: 'both',
   });
 
@@ -40,7 +47,7 @@ export default function AdminProductForm() {
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState('');
-  const [customSize, setCustomSize] = useState('');
+  const [customSizes, setCustomSizes] = useState(['']);
 
   useEffect(() => {
     if (!isEdit) return;
@@ -53,15 +60,20 @@ export default function AdminProductForm() {
       discount: existing.salePrice != null
         ? String(Math.round(((existing.price - existing.salePrice) / existing.price) * 100))
         : '',
-      colors: (existing.colors || []).map((c) => ({ name: c.name, hex: c.hex, images: c.images || [] })),
-      sizes: existing.sizes || [],
+      colors: (existing.colors || []).map((c) => ({
+        name: c.name,
+        hex: c.hex,
+        images: c.images || [],
+        sizes: Array.isArray(c.sizes) ? c.sizes : (existing.sizes || []),
+        soldOutSizes: Array.isArray(c.sizes) ? (c.soldOutSizes || []) : (existing.soldOutSizes || []),
+      })),
       images: existing.images || [],
       active: existing.active !== false,
       soldOut: existing.soldOut === true,
       soldOutColors: existing.soldOutColors || [],
-      soldOutSizes: existing.soldOutSizes || [],
       season: normalizeSeason(existing.season),
     });
+    setCustomSizes((existing.colors || []).map(() => ''));
     setReady(true);
   }, [isEdit, existing]);
 
@@ -88,7 +100,11 @@ export default function AdminProductForm() {
       if (names.some((n) => !n)) e.colors = 'admin.errColorNameRequired';
       else if (new Set(names).size !== names.length) e.colors = 'admin.errDuplicateColorName';
     }
-    if (!form.sizes.length) e.sizes = 'admin.errSizesRequired';
+    const sizes = collectSizes(form.colors);
+    if (!sizes.length) e.sizes = 'admin.errSizesRequired';
+    if (form.colors.some((color) =>
+      !form.soldOutColors.includes(color.name) && !(color.sizes || []).length
+    )) e.colorSizes = 'admin.errColorSizesRequired';
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -107,13 +123,13 @@ export default function AdminProductForm() {
       price: parseFloat(form.price),
       salePrice: onSale ? finalPrice : null,
       colors: form.colors.map((c) => ({ ...c, name: c.name.trim() })),
-      sizes: form.sizes,
+      sizes: collectSizes(form.colors),
       images: form.images,
       active: form.active,
       soldOut: form.soldOut,
       soldOutColors: form.soldOutColors.map((n) => n.trim())
         .filter((n) => form.colors.some((c) => c.name.trim() === n)),
-      soldOutSizes: form.soldOutSizes,
+      soldOutSizes: [],
       season: form.season,
       isNew: isEdit ? existing.isNew : true,
       createdAt: isEdit ? existing.createdAt : Date.now(),
@@ -139,20 +155,35 @@ export default function AdminProductForm() {
 
   // Default name is unique ("New Color", "New Color 2", ...) so a fresh row
   // never clashes with an existing one — duplicate names are rejected on submit.
-  const addColor = () => setForm((p) => {
-    let name = 'New Color';
-    for (let n = 2; p.colors.some((c) => c.name.trim().toLowerCase() === name.toLowerCase()); n++) name = `New Color ${n}`;
-    return { ...p, colors: [...p.colors, { name, hex: '#d9c9ae', images: [] }] };
-  });
-  const removeColor = (i) => setForm((p) => {
-    const removedName = p.colors[i]?.name;
+  const addColor = () => {
+    setCustomSizes((current) => [...current, '']);
+    setForm((p) => {
+      let name = 'New Color';
+      for (let n = 2; p.colors.some((c) => c.name.trim().toLowerCase() === name.toLowerCase()); n++) name = `New Color ${n}`;
+      return { ...p, colors: [...p.colors, { name, hex: '#d9c9ae', images: [], sizes: [], soldOutSizes: [] }] };
+    });
+  };
+  const removeColor = (i) => {
+    setCustomSizes((current) => current.filter((_, index) => index !== i));
+    setForm((p) => {
+      const removedName = p.colors[i]?.name;
+      return {
+        ...p,
+        colors: p.colors.filter((_, idx) => idx !== i),
+        soldOutColors: p.soldOutColors.filter((name) => name !== removedName),
+      };
+    });
+  };
+  const updateColor = (i, field, value) => setForm((p) => {
+    const oldName = p.colors[i]?.name;
     return {
       ...p,
-      colors: p.colors.filter((_, idx) => idx !== i),
-      soldOutColors: p.soldOutColors.filter((name) => name !== removedName),
+      colors: p.colors.map((c, idx) => idx === i ? { ...c, [field]: value } : c),
+      ...(field === 'name' && p.soldOutColors.includes(oldName)
+        ? { soldOutColors: p.soldOutColors.map((name) => name === oldName ? value : name) }
+        : {}),
     };
   });
-  const updateColor = (i, field, value) => setForm((p) => ({ ...p, colors: p.colors.map((c, idx) => idx === i ? { ...c, [field]: value } : c) }));
   // Uploads through the Cloudinary pipeline (compressed + EXIF-oriented in
   // the browser, stored server-side); no base64 blobs in D1.
   const addColorImages = async (i, files) => {
@@ -181,40 +212,54 @@ export default function AdminProductForm() {
       ),
     }));
   };
-  const toggleSize = (s) => setForm((p) => {
-    const existingSize = p.sizes.find((size) => size.toLowerCase() === s.toLowerCase());
-    const removing = existingSize !== undefined;
-    return {
-      ...p,
-      sizes: removing
-        ? p.sizes.filter((size) => size.toLowerCase() !== s.toLowerCase())
-        : [...p.sizes, s],
-      soldOutSizes: removing
-        ? p.soldOutSizes.filter((size) => size !== existingSize)
-        : p.soldOutSizes,
-    };
-  });
+  const toggleColorSize = (colorIndex, size) => setForm((p) => ({
+    ...p,
+    colors: p.colors.map((color, index) => {
+      if (index !== colorIndex) return color;
+      const existingSize = (color.sizes || []).find((item) => item.toLowerCase() === size.toLowerCase());
+      const removing = existingSize !== undefined;
+      return {
+        ...color,
+        sizes: removing
+          ? color.sizes.filter((item) => item !== existingSize)
+          : [...(color.sizes || []), size],
+        soldOutSizes: removing
+          ? (color.soldOutSizes || []).filter((item) => item !== existingSize)
+          : (color.soldOutSizes || []),
+      };
+    }),
+  }));
   const toggleSoldOutColor = (name) => setForm((p) => ({
     ...p,
     soldOutColors: p.soldOutColors.includes(name)
       ? p.soldOutColors.filter((value) => value !== name)
       : [...p.soldOutColors, name],
   }));
-  const toggleSoldOutSize = (size) => setForm((p) => ({
+  const toggleSoldOutSize = (colorIndex, size) => setForm((p) => ({
     ...p,
-    soldOutSizes: p.soldOutSizes.includes(size)
-      ? p.soldOutSizes.filter((value) => value !== size)
-      : [...p.soldOutSizes, size],
+    colors: p.colors.map((color, index) => index !== colorIndex ? color : ({
+      ...color,
+      soldOutSizes: (color.soldOutSizes || []).includes(size)
+        ? color.soldOutSizes.filter((value) => value !== size)
+        : [...(color.soldOutSizes || []), size],
+    })),
   }));
-  const addCustomSize = () => {
-    const value = customSize.trim();
+  const addCustomSize = (colorIndex) => {
+    const value = (customSizes[colorIndex] || '').trim();
     if (!value) return;
     setForm((current) => {
-      const exists = current.sizes.some((size) => size.toLowerCase() === value.toLowerCase());
+      const color = current.colors[colorIndex];
+      if (!color) return current;
+      const exists = (color.sizes || []).some((size) => size.toLowerCase() === value.toLowerCase());
       if (exists) return current;
-      return { ...current, sizes: [...current.sizes, value] };
+      return {
+        ...current,
+        colors: current.colors.map((item, index) => index === colorIndex
+          ? { ...item, sizes: [...(item.sizes || []), value] }
+          : item),
+      };
     });
-    setCustomSize('');
+    setCustomSizes((current) => current.map((size, index) => index === colorIndex ? '' : size));
   };
 
   const handleImages = async (ev) => {
@@ -371,80 +416,80 @@ export default function AdminProductForm() {
                       hidden
                     />
                   </div>
-                </div>
-              ))}
-            </div>
-            <button type="button" className="btn btn-outline btn-sm" onClick={addColor}>{t('admin.addColor')}</button>
-          </div>
-
-          <div className="admin-field full">
-            <label>{t('admin.sizes')}</label>
-            <span className="muted small">{t('admin.chooseSizes')}</span>
-            <div className="admin-size-options">
-              {[
-                [t('admin.letterSizes'), LETTER_SIZE_OPTIONS],
-                [t('admin.numberSizes'), NUMBER_SIZE_OPTIONS],
-              ].map(([label, options]) => (
-                <div key={label} role="group" aria-label={label}>
-                  <div className="admin-size-list">
-                    {options.map((size) => {
-                      const selected = form.sizes.some((current) => current.toLowerCase() === size.toLowerCase());
-                      return (
-                        <button
-                          key={size}
-                          type="button"
-                          className={`size-chip ${selected ? 'active' : ''}`}
-                          aria-pressed={selected}
-                          onClick={() => toggleSize(size)}
-                        >
-                          {size}
-                        </button>
-                      );
-                    })}
+                  <div className="admin-color-sizes">
+                    <strong>{t('admin.sizes')} — {c.name}</strong>
+                    <span className="muted small">{t('admin.chooseColorSizes')}</span>
+                    <div className="admin-size-options">
+                      {[
+                        [t('admin.letterSizes'), LETTER_SIZE_OPTIONS],
+                        [t('admin.numberSizes'), NUMBER_SIZE_OPTIONS],
+                      ].map(([label, options]) => (
+                        <div key={label} role="group" aria-label={`${label} — ${c.name}`}>
+                          <div className="admin-size-list">
+                            {options.map((size) => {
+                              const selected = (c.sizes || []).some((current) => current.toLowerCase() === size.toLowerCase());
+                              return (
+                                <button
+                                  key={size}
+                                  type="button"
+                                  className={`size-chip ${selected ? 'active' : ''}`}
+                                  aria-pressed={selected}
+                                  onClick={() => toggleColorSize(i, size)}
+                                >
+                                  {size}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="admin-stock-size-list">
+                      {(c.sizes || []).map((size) => (
+                        <label key={size} className={`admin-stock-size-row ${c.soldOutSizes?.includes(size) ? 'is-sold-out' : ''}`}>
+                          <strong>{size}</strong>
+                          <span>{t('admin.soldOutShort')}</span>
+                          <input
+                            type="checkbox"
+                            checked={c.soldOutSizes?.includes(size) || false}
+                            onChange={() => toggleSoldOutSize(i, size)}
+                          />
+                          <button
+                            type="button"
+                            className="admin-stock-size-remove"
+                            onClick={(event) => { event.preventDefault(); toggleColorSize(i, size); }}
+                            aria-label={`${t('admin.remove')} ${size}`}
+                          >
+                            ×
+                          </button>
+                        </label>
+                      ))}
+                    </div>
+                    <div className="admin-custom-size">
+                      <input
+                        type="text"
+                        value={customSizes[i] || ''}
+                        onChange={(event) => setCustomSizes((current) => current.map((size, index) => index === i ? event.target.value : size))}
+                        placeholder={t('admin.customSize')}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter') {
+                            event.preventDefault();
+                            addCustomSize(i);
+                          }
+                        }}
+                      />
+                      <button type="button" className="admin-add-size-btn" onClick={() => addCustomSize(i)}>
+                        <span className="admin-add-size-plus" aria-hidden="true" />
+                        {t('admin.addSize')}
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
             {errors.sizes && <span className="admin-field-error">{t(errors.sizes)}</span>}
-            <div className="admin-sizes-box">
-              <div className="admin-sizes-box-head">
-                <strong>{t('admin.selectedSizes')}</strong>
-                <span className="muted small">{t('admin.soldOutSizesHint')}</span>
-              </div>
-              <div className="admin-stock-size-list">
-                {form.sizes.map((size) => (
-                  <label key={size} className={`admin-stock-size-row ${form.soldOutSizes.includes(size) ? 'is-sold-out' : ''}`}>
-                    <strong>{size}</strong>
-                    <span>{t('admin.soldOutShort')}</span>
-                    <input
-                      type="checkbox"
-                      checked={form.soldOutSizes.includes(size)}
-                      onChange={() => toggleSoldOutSize(size)}
-                    />
-                    <button type="button" className="admin-stock-size-remove" onClick={(event) => { event.preventDefault(); toggleSize(size); }} aria-label={`${t('admin.remove')} ${size}`}>×</button>
-                  </label>
-                ))}
-              </div>
-            </div>
-            <div className="admin-custom-size">
-              <input
-                type="text"
-                id="customSize"
-                value={customSize}
-                onChange={(e) => setCustomSize(e.target.value)}
-                placeholder={t('admin.customSize')}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    addCustomSize();
-                  }
-                }}
-              />
-              <button type="button" className="admin-add-size-btn" onClick={addCustomSize}>
-                <span className="admin-add-size-plus" aria-hidden="true" />
-                {t('admin.addSize')}
-              </button>
-            </div>
+            {errors.colorSizes && <span className="admin-field-error">{t(errors.colorSizes)}</span>}
+            <button type="button" className="btn btn-outline btn-sm" onClick={addColor}>{t('admin.addColor')}</button>
           </div>
 
           <div className="admin-field full">

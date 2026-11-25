@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useMemo } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useAdmin } from './AdminContext';
 import { effectivePrice } from '../data/products';
+import { isVariantAvailable } from '../data/variantAvailability';
 import { STORE } from '../config';
 
 const CartContext = createContext(null);
@@ -16,11 +17,7 @@ export function CartProvider({ children }) {
 
   const addItem = useCallback(
     (product, { size, color, qty = 1 }) => {
-      if (
-        product.soldOut === true ||
-        (product.soldOutColors || []).includes(color) ||
-        (product.soldOutSizes || []).includes(size)
-      ) return false;
+      if (!isVariantAvailable(product, color, size)) return false;
       const key = `${product.id}|${size}|${color}`;
       setItems((prev) => {
         const found = prev.find((i) => i.key === key);
@@ -51,9 +48,7 @@ export function CartProvider({ children }) {
       .map((i) => ({ ...i, product: products.find((p) => p.id === i.id) }))
       .filter((l) => l.product)
       .filter((l) =>
-        l.product.soldOut !== true &&
-        !(l.product.soldOutColors || []).includes(l.color) &&
-        !(l.product.soldOutSizes || []).includes(l.size)
+        isVariantAvailable(l.product, l.color, l.size)
       )
       .map((l) => ({ ...l, unit: effectivePrice(l.product), total: effectivePrice(l.product) * l.qty }));
     const count = lines.reduce((s, l) => s + l.qty, 0);

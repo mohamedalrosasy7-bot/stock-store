@@ -429,8 +429,9 @@ p { margin: 0 0 1rem; }
 .pdp-grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 3.5rem; align-items: start; }
 .gallery { display: grid; grid-template-columns: 84px 1fr; gap: 0.9rem; position: sticky; top: 130px; }
 .thumbs { display: flex; flex-direction: column; gap: 0.7rem; }
-.thumb { flex: 0 0 auto; aspect-ratio: 4 / 5; border: 1px solid transparent; opacity: 0.6; transition: 0.2s; overflow: hidden; }
+.thumb { position: relative; flex: 0 0 auto; aspect-ratio: 4 / 5; border: 1px solid transparent; opacity: 0.6; transition: 0.2s; overflow: hidden; }
 .thumb .pimg { height: 100%; }
+.thumb .badge-sold-out { position: absolute; inset: auto 3px 3px; z-index: 1; padding: .2rem .25rem; font-size: .48rem; text-align: center; }
 .thumb.active, .thumb:hover { opacity: 1; border-color: var(--text); }
 .thumb.matches-selected-color {
   border-color: var(--accent);
@@ -2454,6 +2455,9 @@ p { margin: 0 0 1rem; }
   background: var(--bg);
   scrollbar-width: thin;
 }
+.admin-color-sizes { display: grid; gap: .55rem; padding: .7rem; border: 1px solid var(--line); border-radius: 12px; background: var(--bg); }
+.admin-color-sizes > strong { font-size: .82rem; }
+.admin-color-sizes .admin-custom-size { margin-top: 0; }
 .admin-color-image {
   position: relative;
   width: 54px;
@@ -2653,6 +2657,11 @@ p { margin: 0 0 1rem; }
   .admin-topbar { padding: 0 1.25rem; height: 66px; }
   .admin-desktop-only { display: none; }
   .admin-mobile-cards { display: flex; }
+}
+@media (min-width: 1025px) {
+  .admin-stock-size-list {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
 }
 @media (max-width: 600px) {
   .admin-main { padding: 1rem; }

@@ -104,6 +104,7 @@ export default {
     size: 'المقاس:',
     selectColor: 'اختر لوناً',
     selectSize: 'اختر مقاساً',
+    noSizesForColor: 'لا توجد مقاسات متاحة لهذا اللون.',
     quantity: 'الكمية',
     chooseColorSize: 'اختر لوناً ومقاساً لكل قطعة.',
     addedToCart: 'تمت إضافة {name} إلى السلة',
@@ -376,6 +377,7 @@ export default {
     soldOutSizesHint: 'فعّل المقاس الذي نفد فقط',
     availableSizes: 'المقاسات المتاحة',
     chooseSizes: 'حدد المقاسات المتوفرة للمنتج. لا يوجد مقاس محدد تلقائياً.',
+    chooseColorSizes: 'حدد المقاسات المتوفرة لهذا اللون، وفعّل المقاس الذي نفد.',
     letterSizes: 'مقاسات الحروف',
     numberSizes: 'مقاسات الأرقام',
     selectedSizes: 'المقاسات المختارة',
@@ -407,6 +409,7 @@ export default {
     errColorNameRequired: 'اكتب اسماً لكل لون',
     errDuplicateColorName: 'أسماء الألوان يجب أن تكون مختلفة — نفس اللون مرتين يحتاج اسماً مختلفاً',
     errSizesRequired: 'اختر مقاساً واحداً على الأقل',
+    errColorSizesRequired: 'حدد مقاساً لكل لون متاح أو علّم اللون كنافد.',
     errImagesRequired: 'أضف صورة واحدة على الأقل',
     // Ads
     manageBanner: 'أدر البانر بعرض كامل في صفحة المتجر.',

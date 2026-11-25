@@ -13,6 +13,7 @@ import Price from '../components/Price';
 import QtySelect from '../components/QtySelect';
 import { BagIcon, CashIcon, HeartIcon, ReturnIcon, TrashIcon, TruckIcon } from '../components/Icons';
 import NotFound from './NotFound';
+import { getColorAvailability, isVariantAvailable } from '../data/variantAvailability';
 
 export default function ProductDetails() {
   const { id } = useParams();
@@ -49,14 +50,17 @@ function Details({ product, categories }) {
   const sizes = Array.isArray(product.sizes) ? product.sizes : [];
   const images = Array.isArray(product.images) ? product.images.filter(Boolean) : [];
   const soldOutWhole = product.soldOut === true;
-  const soldOutColors = new Set(product.soldOutColors || []);
-  const soldOutSizes = new Set(product.soldOutSizes || []);
-  const availableColors = colors.filter((color) => !soldOutWhole && !soldOutColors.has(color.name));
-  const availableSizes = sizes.filter((size) => !soldOutWhole && !soldOutSizes.has(size));
+  const firstAvailableColor = colors.find((color) =>
+    getColorAvailability(product, color.name).availableSizes.length > 0
+  );
+  const initialColor = firstAvailableColor || colors[0];
+  const initialColorSizes = initialColor
+    ? getColorAvailability(product, initialColor.name).availableSizes
+    : [];
   const [variants, setVariants] = useState([{
     id: 0,
-    color: availableColors[0]?.name || '',
-    size: availableSizes.length === 1 ? availableSizes[0] : null,
+    color: initialColor?.name || '',
+    size: initialColorSizes.length === 1 ? initialColorSizes[0] : null,
     qty: 1,
   }]);
   const [activeVariantId, setActiveVariantId] = useState(0);
@@ -64,7 +68,8 @@ function Details({ product, categories }) {
   const nextVariantId = useRef(1);
   const selectedVariant = variants.find((variant) => variant.id === activeVariantId) || variants[0];
   const selectedColor = colors.find((color) => color.name === selectedVariant?.color);
-  const colorImages = Array.isArray(selectedColor?.images) ? selectedColor.images.filter(Boolean) : [];
+  const selectedColorAvailability = getColorAvailability(product, selectedVariant?.color);
+  const selectedColorSoldOut = !!selectedColor && selectedColorAvailability.soldOut;
   const allColorImages = colors.flatMap((color) =>
     Array.isArray(color.images) ? color.images.filter(Boolean) : []
   );
@@ -72,17 +77,26 @@ function Details({ product, categories }) {
 
   useSEO(product.name, product.description);
 
+  const updateVariantColor = (variantId, colorName) => {
+    const currentVariant = variants.find((variant) => variant.id === variantId);
+    const availability = getColorAvailability(product, colorName);
+    const size = availability.availableSizes.includes(currentVariant?.size)
+      ? currentVariant.size
+      : availability.availableSizes.length === 1
+        ? availability.availableSizes[0]
+        : null;
+    setVariants((current) => current.map((variant) =>
+      variant.id === variantId ? { ...variant, color: colorName, size } : variant
+    ));
+  };
+
   const selectImage = (index) => {
     setImg(index);
     const matchingColor = colors.find((color) =>
       Array.isArray(color.images) && color.images.includes(activeImages[index])
     );
     if (matchingColor && selectedVariant) {
-      setVariants((current) => current.map((variant) =>
-        variant.id === activeVariantId
-          ? { ...variant, color: matchingColor.name }
-          : variant
-      ));
+      updateVariantColor(activeVariantId, matchingColor.name);
     }
   };
   const stepImage = (step) => {
@@ -113,10 +127,14 @@ function Details({ product, categories }) {
 
   const updateVariant = (id, field, value) => {
     setActiveVariantId(id);
-    setVariants((current) => current.map((variant) =>
-      variant.id === id ? { ...variant, [field]: value } : variant
-    ));
-    if (field === 'color') setImg(0);
+    if (field === 'color') {
+      updateVariantColor(id, value);
+      setImg(0);
+    } else {
+      setVariants((current) => current.map((variant) =>
+        variant.id === id ? { ...variant, [field]: value } : variant
+      ));
+    }
     const variant = variants.find((item) => item.id === id);
     const otherChoice = field === 'color' ? variant?.size : variant?.color;
     if ((field === 'color' || field === 'size') && value && otherChoice) {
@@ -126,9 +144,13 @@ function Details({ product, categories }) {
 
   const addVariant = () => {
     const id = nextVariantId.current++;
+    const colorName = firstAvailableColor?.name || '';
+    const availableSizes = colorName
+      ? getColorAvailability(product, colorName).availableSizes
+      : [];
     setVariants((current) => [...current, {
       id,
-      color: availableColors[0]?.name || '',
+      color: colorName,
       size: availableSizes.length === 1 ? availableSizes[0] : null,
       qty: 1,
     }]);
@@ -148,9 +170,7 @@ function Details({ product, categories }) {
     const invalidVariants = variants.filter((variant) =>
       !variant.color ||
       !variant.size ||
-      soldOutWhole ||
-      soldOutColors.has(variant.color) ||
-      soldOutSizes.has(variant.size)
+      !isVariantAvailable(product, variant.color, variant.size)
     );
     if (invalidVariants.length) {
       setVariantErrors(invalidVariants.map((variant) => variant.id));
@@ -192,6 +212,9 @@ function Details({ product, categories }) {
                 const imageColor = colors.find((color) =>
                   Array.isArray(color.images) && color.images.includes(src)
                 );
+                const imageColorSoldOut = imageColor
+                  ? getColorAvailability(product, imageColor.name).soldOut
+                  : false;
                 return (
               <button
                 key={src}
@@ -200,6 +223,7 @@ function Details({ product, categories }) {
                 aria-label={t('product.viewImage', { index: i + 1 })}
               >
                 <ProductImage src={src} alt={`${product.name} view ${i + 1}`} />
+                {imageColorSoldOut && <span className="badge badge-sold-out">{t('admin.soldOut')}</span>}
               </button>
                 );
               })()
@@ -223,7 +247,7 @@ function Details({ product, categories }) {
             )}
             <div className="badges">
               {pct > 0 && <span className="badge badge-sale">-{pct}%</span>}
-              {soldOutWhole && <span className="badge badge-sold-out">{t('admin.soldOut')}</span>}
+              {(soldOutWhole || selectedColorSoldOut) && <span className="badge badge-sold-out">{t('admin.soldOut')}</span>}
             </div>
           </div>
         </div>
@@ -239,6 +263,7 @@ function Details({ product, categories }) {
           <div className="variant-list" id="pick">
             {variants.map((variant, index) => {
               const hasError = variantErrors.includes(variant.id);
+              const availability = getColorAvailability(product, variant.color);
               return (
                 <section
                   key={variant.id}
@@ -276,9 +301,9 @@ function Details({ product, categories }) {
                           aria-checked={variant.color === c.name}
                           aria-label={c.name}
                           title={c.name}
-                          className={`swatch ${variant.color === c.name ? 'active' : ''} ${soldOutWhole || soldOutColors.has(c.name) ? 'sold-out' : ''}`}
+                          className={`swatch ${variant.color === c.name ? 'active' : ''} ${getColorAvailability(product, c.name).soldOut ? 'sold-out' : ''}`}
                           style={{ '--c': c.hex }}
-                          disabled={soldOutWhole || soldOutColors.has(c.name)}
+                          disabled={getColorAvailability(product, c.name).soldOut}
                           onClick={() => updateVariant(variant.id, 'color', c.name)}
                         />
                       ))}
@@ -289,20 +314,23 @@ function Details({ product, categories }) {
                       {t('product.size')} <strong>{variant.size || t('product.selectSize')}</strong>
                     </div>
                     <div className={`sizes big ${hasError && !variant.size ? 'error' : ''}`} role="radiogroup" aria-label={t('product.size')}>
-                      {sizes.map((sizeOption) => (
+                      {availability.sizes.map((sizeOption) => (
                         <button
                           key={sizeOption}
                           type="button"
                           role="radio"
                           aria-checked={variant.size === sizeOption}
-                          className={`size ${variant.size === sizeOption ? 'active' : ''} ${soldOutWhole || soldOutSizes.has(sizeOption) ? 'sold-out' : ''}`}
-                          disabled={soldOutWhole || soldOutSizes.has(sizeOption)}
+                          className={`size ${variant.size === sizeOption ? 'active' : ''} ${availability.soldOutSizes.includes(sizeOption) ? 'sold-out' : ''}`}
+                          disabled={availability.soldOut || availability.soldOutSizes.includes(sizeOption)}
                           onClick={() => updateVariant(variant.id, 'size', sizeOption)}
                         >
                           {sizeOption}
                         </button>
                       ))}
                     </div>
+                    {!!variant.color && !availability.sizes.length && (
+                      <p className="muted small">{t('product.noSizesForColor')}</p>
+                    )}
                     {hasError && <p className="form-msg error">{t('product.chooseColorSize')}</p>}
                   </div>
                   <div className="option variant-quantity">

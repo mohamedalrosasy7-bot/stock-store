@@ -104,6 +104,7 @@ export default {
     size: 'Size:',
     selectColor: 'Select a color',
     selectSize: 'Select a size',
+    noSizesForColor: 'No sizes are available in this color.',
     quantity: 'Quantity',
     chooseColorSize: 'Choose a color and size for each item.',
     addedToCart: '{name} added to cart',
@@ -376,6 +377,7 @@ export default {
     soldOutSizesHint: 'Enable only the size that is sold out',
     availableSizes: 'Available sizes',
     chooseSizes: 'Select the sizes available for this product. None are selected by default.',
+    chooseColorSizes: 'Select the sizes available in this color and mark any sold-out sizes.',
     letterSizes: 'Letter sizes',
     numberSizes: 'Number sizes',
     selectedSizes: 'Selected sizes',
@@ -407,6 +409,7 @@ export default {
     errColorNameRequired: 'Enter a name for every color',
     errDuplicateColorName: 'Color names must be different — the same shade twice needs a new name',
     errSizesRequired: 'Select at least one size',
+    errColorSizesRequired: 'Select at least one size for each available color or mark the color sold out.',
     errImagesRequired: 'Add at least one image',
     // Ads
     manageBanner: 'Manage the full-width banner on the shop page.',
