@@ -68,6 +68,7 @@ function Details({ product, categories }) {
   const nextVariantId = useRef(1);
   const selectedVariant = variants.find((variant) => variant.id === activeVariantId) || variants[0];
   const selectedColor = colors.find((color) => color.name === selectedVariant?.color);
+  const selectedColorHasImages = Array.isArray(selectedColor?.images) && selectedColor.images.some(Boolean);
   const selectedColorAvailability = getColorAvailability(product, selectedVariant?.color);
   const selectedColorSoldOut = !!selectedColor && selectedColorAvailability.soldOut;
   const allColorImages = colors.flatMap((color) =>
@@ -80,7 +81,6 @@ function Details({ product, categories }) {
   const updateVariantColor = (variantId, colorName) => {
     const currentVariant = variants.find((variant) => variant.id === variantId);
     const availability = getColorAvailability(product, colorName);
-    if (availability.soldOut) return;
     const size = availability.availableSizes.includes(currentVariant?.size)
       ? currentVariant.size
       : availability.availableSizes.length === 1
@@ -130,7 +130,9 @@ function Details({ product, categories }) {
     setActiveVariantId(id);
     if (field === 'color') {
       updateVariantColor(id, value);
-      setImg(0);
+      const colorImages = colors.find((color) => color.name === value)?.images || [];
+      const firstColorImage = activeImages.findIndex((src) => colorImages.includes(src));
+      setImg(firstColorImage >= 0 ? firstColorImage : 0);
     } else {
       setVariants((current) => current.map((variant) =>
         variant.id === id ? { ...variant, [field]: value } : variant
@@ -194,6 +196,10 @@ function Details({ product, categories }) {
     navigate('/checkout');
   };
 
+  const hasSoldOutVariant = variants.some((variant) =>
+    variant.color && getColorAvailability(product, variant.color).soldOut
+  );
+
   if (!colors.length || !sizes.length) {
     return <div className="container pdp"><p>{t('product.incomplete')}</p></div>;
   }
@@ -217,10 +223,15 @@ function Details({ product, categories }) {
                   ? getColorAvailability(product, imageColor.name).soldOut
                   : false;
                 const thumbSoldOut = soldOutWhole || imageColorSoldOut;
+                const matchesSelectedColor = !!selectedVariant?.color && (
+                  imageColor
+                    ? imageColor.name === selectedVariant.color
+                    : !selectedColorHasImages
+                );
                 return (
               <button
                 key={src}
-                className={`thumb ${i === img ? 'active' : ''} ${imageColor?.name === selectedVariant?.color ? 'matches-selected-color' : ''}`}
+                className={`thumb ${i === img ? 'active' : ''} ${matchesSelectedColor ? 'matches-selected-color' : ''}`}
                 onClick={() => selectImage(i)}
                 aria-label={t('product.viewImage', { index: i + 1 })}
               >
@@ -305,7 +316,6 @@ function Details({ product, categories }) {
                           title={c.name}
                           className={`swatch ${!getColorAvailability(product, c.name).soldOut ? 'available' : ''} ${variant.color === c.name ? 'active' : ''} ${getColorAvailability(product, c.name).soldOut ? 'sold-out' : ''}`}
                           style={{ '--c': c.hex }}
-                          disabled={getColorAvailability(product, c.name).soldOut}
                           onClick={() => updateVariant(variant.id, 'color', c.name)}
                         />
                       ))}
@@ -351,10 +361,10 @@ function Details({ product, categories }) {
           </button>
 
           <div className="pdp-actions">
-            <button className="btn btn-lg btn-discover" onClick={add} disabled={soldOutWhole}>
+            <button className="btn btn-lg btn-discover" onClick={add} disabled={soldOutWhole || hasSoldOutVariant}>
               <BagIcon size={18} /> {t('product.addToCart')}
             </button>
-            <button className="btn btn-outline btn-lg btn-buy" onClick={buyNow} disabled={soldOutWhole}>
+            <button className="btn btn-outline btn-lg btn-buy" onClick={buyNow} disabled={soldOutWhole || hasSoldOutVariant}>
               {t('product.buyNow')}
             </button>
             <button

@@ -16,6 +16,21 @@ const addChelseaToCart = async (page) => {
 export default async function t2({ page, results, ok }) {
   const err0 = page._errors.length;
 
+  // Sold-out colors remain selectable for photo browsing, but cannot be ordered.
+  await go(page, '/product/test-sold-out-product');
+  await sleep(600);
+  const soldOutColorEnabled = await page.$eval(
+    '.variant-swatches .swatch:nth-child(2)',
+    (button) => !button.disabled
+  );
+  await clickNth(page, '.variant-swatches .swatch', 1);
+  await sleep(200);
+  ok('pdp: sold-out color can be selected', soldOutColorEnabled
+    && (await page.$eval('.variant-swatches .swatch:nth-child(2)', (button) => button.getAttribute('aria-checked'))) === 'true');
+  ok('pdp: selected sold-out color highlights its images', (await count(page, '.thumb.matches-selected-color')) > 0);
+  ok('pdp: sold-out product cannot be ordered', (await page.$eval('.pdp-actions .btn-discover', (button) => button.disabled))
+    && (await page.$eval('.pdp-actions .btn-buy', (button) => button.disabled)));
+
   // ---- Card "Add to cart" -> PDP #pick (variants must be chosen on the PDP) ----
   await go(page, '/shop?q=Chelsea');
   await sleep(600);

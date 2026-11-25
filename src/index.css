@@ -224,10 +224,8 @@ p { margin: 0 0 1rem; }
 .swatch:hover { transform: scale(1.15); }
 .swatch.available { box-shadow: 0 0 0 2px var(--surface), 0 0 0 3px color-mix(in srgb, var(--text) 28%, transparent); }
 .swatch.active { outline: 1.5px solid var(--text); }
-.swatch.sold-out { opacity: .35; filter: grayscale(.8); text-decoration: line-through; }
-.swatch.sold-out::after { position: absolute; width: 150%; height: 2px; border-radius: 999px; background: var(--danger); content: ''; transform: rotate(-45deg); }
-.swatch.sold-out { position: relative; overflow: hidden; }
-.swatch.sold-out::before { position: absolute; inset: 50% -25% auto; height: 2px; background: var(--danger); content: ''; transform: rotate(-45deg); }
+.swatch.sold-out { position: relative; overflow: hidden; opacity: 1; filter: none; }
+.swatch.sold-out::after { position: absolute; top: 50%; left: -25%; width: 150%; height: 2px; border-radius: 999px; background: var(--danger); content: ''; transform: rotate(-45deg); }
 .swatches.big .swatch { width: 30px; height: 30px; }
 .sizes { display: flex; flex-wrap: wrap; gap: 0.3rem; }
 .size { min-width: 34px; padding: 0.2rem 0.45rem; border: 1px solid var(--line); font-size: 0.72rem; transition: 0.2s; }
