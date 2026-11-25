@@ -3,8 +3,12 @@
 const inflight = new Map();
 const REQUEST_TIMEOUT_MS = 30_000;
 
-export async function api(path, { method = 'GET', body, signal } = {}) {
-  const key = `${method} ${path} ${body ? JSON.stringify(body) : ''}`;
+export async function api(path, { method = 'GET', body, signal, headers: extraHeaders } = {}) {
+  const headers = {
+    ...(body !== undefined ? { 'content-type': 'application/json' } : {}),
+    ...(extraHeaders || {}),
+  };
+  const key = `${method} ${path} ${body ? JSON.stringify(body) : ''} ${JSON.stringify(headers)}`;
   if (method === 'GET' && inflight.has(key)) return inflight.get(key);
 
   const promise = (async () => {
@@ -21,14 +25,16 @@ export async function api(path, { method = 'GET', body, signal } = {}) {
     try {
       const res = await fetch(path, {
         method,
-        headers: body !== undefined ? { 'content-type': 'application/json' } : undefined,
+        headers: Object.keys(headers).length ? headers : undefined,
         body: body !== undefined ? JSON.stringify(body) : undefined,
         credentials: 'same-origin',
-        // Always talk to the Functions: D1 is the source of truth and admin edits
-        // must show up instantly. React state is the instant-render cache.
+        // API responses are validated by the Functions rather than browser cache.
         cache: 'no-store',
         signal: controller.signal,
       });
+      if (res.status === 304) {
+        return { notModified: true, etag: res.headers.get('etag') };
+      }
       let data = null;
       try {
         data = await res.json();

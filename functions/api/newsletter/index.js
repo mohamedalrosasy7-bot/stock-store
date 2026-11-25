@@ -25,6 +25,26 @@ export async function onRequestGet(context) {
 }
 
 export async function onRequestPost(context) {
+  const origin = context.request.headers.get('origin');
+  const requestUrl = new URL(context.request.url);
+  let originUrl;
+  try {
+    originUrl = origin ? new URL(origin) : null;
+  } catch {
+    originUrl = null;
+  }
+  const isLocalDevOrigin = originUrl
+    && requestUrl.protocol === 'http:'
+    && originUrl.protocol === 'http:'
+    && originUrl.hostname === requestUrl.hostname
+    && ['localhost', '127.0.0.1', '[::1]'].includes(requestUrl.hostname);
+  if (!originUrl || (originUrl.origin !== requestUrl.origin && !isLocalDevOrigin)) {
+    return bad('Invalid request origin.', 403);
+  }
+
+  const contentType = context.request.headers.get('content-type')?.split(';', 1)[0].trim().toLowerCase();
+  if (contentType !== 'application/json') return bad('Content-Type must be application/json.', 415);
+
   const ip = context.request.headers.get('CF-Connecting-IP') || 'local';
   if (!rateLimit(`newsletter:${ip}`, 5, 60_000)) return bad('Too many requests, please slow down.', 429);
 

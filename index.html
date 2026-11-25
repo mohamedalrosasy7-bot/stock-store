@@ -20,30 +20,7 @@
       href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap"
       rel="stylesheet"
     />
-    <script>
-      // Apply saved language before paint to avoid a RTL/LTR flash
-      try {
-        var lang = localStorage.getItem('mv-lang');
-        if (lang !== 'ar' && lang !== 'en') lang = 'ar';
-        document.documentElement.setAttribute('lang', lang);
-        document.documentElement.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
-      } catch (e) {
-        document.documentElement.setAttribute('lang', 'ar');
-        document.documentElement.setAttribute('dir', 'rtl');
-      }
-    </script>
-    <script>
-      try {
-        localStorage.removeItem('mv-theme');
-        var t = localStorage.getItem('mv-theme-v2');
-        t = t ? JSON.parse(t) : 'light';
-        if (t !== 'light' && t !== 'dark') t = 'light';
-        document.documentElement.setAttribute('data-theme', t);
-        document.querySelector('meta[name="theme-color"]').setAttribute('content', t === 'dark' ? '#11100f' : '#f8f7f4');
-      } catch (e) {
-        document.documentElement.setAttribute('data-theme', 'light');
-      }
-    </script>
+    <script src="/early-state.js"></script>
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",

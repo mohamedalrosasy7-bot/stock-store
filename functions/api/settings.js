@@ -7,6 +7,7 @@ export async function onRequestGet(context) {
   const { results } = await context.env.DB.prepare('SELECT key, value FROM settings').all();
   const settings = {};
   for (const row of results || []) {
+    if (row.key === 'catalogVersion') continue;
     try { settings[row.key] = JSON.parse(row.value); } catch { settings[row.key] = row.value; }
   }
   return json({ settings });
@@ -30,6 +31,6 @@ export async function onRequestPut(context) {
     'INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value'
   );
   const batch = Object.entries(body).map(([key, value]) => stmt.bind(key, JSON.stringify(value)));
-  await context.env.DB.batch(batch);
+  if (batch.length) await context.env.DB.batch(batch);
   return json({ ok: true, settings: body });
 }

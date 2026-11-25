@@ -1,6 +1,6 @@
 // GET /api/orders     — admin: list orders
 // POST /api/orders    — public: place an order from the storefront
-import { json, bad, readJson, rateLimit } from '../../_lib/util.js';
+import { json, bad, readJsonLimited, rateLimit } from '../../_lib/util.js';
 import { requireAdmin } from '../../_lib/auth.js';
 import { STORE_PRICING } from '../../../shared/pricing.js';
 
@@ -25,12 +25,16 @@ export async function onRequestGet(context) {
 }
 
 const PAYMENTS = ['cod', 'instapay', 'ewallet'];
+const MAX_ORDER_BODY_BYTES = 64 * 1024;
 
 export async function onRequestPost(context) {
   const ip = context.request.headers.get('CF-Connecting-IP') || 'local';
   if (!rateLimit(`orders:${ip}`, 6, 60_000)) return bad('Too many requests, please slow down.', 429);
 
-  const body = await readJson(context.request);
+  const parsed = await readJsonLimited(context.request, MAX_ORDER_BODY_BYTES);
+  if (parsed.error === 'too_large') return bad('Order request body is too large.', 413);
+  if (parsed.error) return bad('Order request must contain valid JSON.');
+  const body = parsed.value;
   const items = Array.isArray(body?.items) ? body.items : null;
   if (!items || !items.length) return bad('Order must contain at least one item.');
   if (items.length > 50) return bad('Order contains too many line items.');

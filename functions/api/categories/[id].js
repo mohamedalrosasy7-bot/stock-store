@@ -15,10 +15,11 @@ export async function onRequestPut(context) {
   if (!row) return bad('Category not found.', 404);
 
   const doc = { ...JSON.parse(row.data), ...body, id };
-  await context.env.DB
+  const updated = await context.env.DB
     .prepare('UPDATE categories SET data = ? WHERE id = ?')
     .bind(JSON.stringify(doc), id)
     .run();
+  if (!updated.meta?.changes) return bad('Category not found.', 404);
   return json({ ok: true, category: doc });
 }
 
@@ -35,6 +36,8 @@ export async function onRequestDelete(context) {
   const remaining = await context.env.DB.prepare('SELECT COUNT(*) AS n FROM categories').first();
   if ((remaining?.n || 0) <= 1) return bad('At least one category must remain.', 409);
 
+  const exists = await context.env.DB.prepare('SELECT id FROM categories WHERE id = ?').bind(id).first();
+  if (!exists) return bad('Category not found.', 404);
   const deleted = await context.env.DB.prepare('DELETE FROM categories WHERE id = ?').bind(id).run();
   if (!deleted.meta?.changes) return bad('Category not found.', 404);
   return json({ ok: true });

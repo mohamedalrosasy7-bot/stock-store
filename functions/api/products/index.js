@@ -11,7 +11,8 @@ export async function onRequestGet(context) {
   const { results } = await context.env.DB
     .prepare('SELECT id, data FROM products ORDER BY position DESC')
     .all();
-  return json({ products: results.map((r) => ({ ...JSON.parse(r.data), id: r.id })) });
+  const products = results.map((r) => ({ ...JSON.parse(r.data), id: r.id }));
+  return json({ products: (await requireAdmin(context)) ? products : products.filter((p) => p.active !== false) });
 }
 
 export async function onRequestPost(context) {

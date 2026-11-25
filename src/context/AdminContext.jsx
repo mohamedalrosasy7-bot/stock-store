@@ -1,8 +1,9 @@
-import { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import { CATEGORIES, IMAGES, PRODUCTS, normalizeSeason } from '../data/products';
 import { api } from '../lib/api';
+import { readStorefrontCache, writeStorefrontCache } from '../lib/storefrontCache';
 
-// Catalog and admin settings persist through the D1-backed /api/* endpoints.
+// D1 is authoritative; public reads use versioned snapshots and admin reads stay uncached.
 const ADMIN_KEY = 'mv_admin';
 
 const DEFAULT_AD_BANNERS = [
@@ -68,6 +69,30 @@ export function AdminProvider({ children }) {
   const [hiddenSeasons, setHiddenSeasons] = useState({});
   const [loaded, setLoaded] = useState(false);
   const [catalogLoaded, setCatalogLoaded] = useState(false);
+  const initialAdminHint = useRef(isLoggedIn);
+  const publicCacheReady = useRef(false);
+  const catalogVersion = useRef(null);
+  const publicRefresh = useRef(null);
+
+  const applyStorefrontSnapshot = useCallback((snapshot, verified = false) => {
+    if (
+      !snapshot ||
+      !/^\d+$/.test(String(snapshot.version)) ||
+      !Array.isArray(snapshot.products) ||
+      !Array.isArray(snapshot.categories) ||
+      !Array.isArray(snapshot.ads?.banners)
+    ) {
+      throw new Error('The storefront catalog snapshot is invalid.');
+    }
+    catalogVersion.current = String(snapshot.version);
+    setProducts(snapshot.products);
+    if (snapshot.categories.length) {
+      setCategories(snapshot.categories.map(normalizeCategory));
+    }
+    setShopAds({ enabled: snapshot.ads.enabled !== false, banners: snapshot.ads.banners });
+    setHiddenSeasons(snapshot.settings?.hiddenSeasons || {});
+    if (verified) setCatalogLoaded(true);
+  }, []);
 
   const refreshStoreData = useCallback(async () => {
     const [catalog, catData, adsData, settingsData] = await Promise.all([
@@ -85,6 +110,69 @@ export function AdminProvider({ children }) {
     setHiddenSeasons(settingsData?.settings?.hiddenSeasons || {});
   }, []);
 
+  const refreshPublicStoreData = useCallback(async () => {
+    if (publicRefresh.current) return publicRefresh.current;
+    const pending = (async () => {
+      let knownVersion = catalogVersion.current;
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const versionData = await api('/api/storefront/version', {
+          headers: knownVersion === null ? undefined : { 'if-none-match': `"${knownVersion}"` },
+        });
+        if (versionData.notModified) {
+          setCatalogLoaded(true);
+          return;
+        }
+        const version = String(versionData.version);
+        if (!/^\d+$/.test(version)) throw new Error('The storefront version response is invalid.');
+        if (version === knownVersion) {
+          setCatalogLoaded(true);
+          return;
+        }
+
+        try {
+          const snapshot = await api(`/api/storefront/catalog?version=${encodeURIComponent(version)}`);
+          if (String(snapshot.version) !== version) {
+            const error = new Error('The storefront catalog changed during refresh.');
+            error.status = 409;
+            throw error;
+          }
+          applyStorefrontSnapshot(snapshot, true);
+          try {
+            await writeStorefrontCache(snapshot);
+          } catch (error) {
+            console.warn('Could not persist the storefront cache:', error?.message);
+          }
+          return;
+        } catch (error) {
+          if (error.status !== 409 || attempt === 1) throw error;
+          knownVersion = null;
+        }
+      }
+    })();
+    publicRefresh.current = pending;
+    try {
+      await pending;
+    } finally {
+      if (publicRefresh.current === pending) publicRefresh.current = null;
+    }
+  }, [applyStorefrontSnapshot]);
+
+  const hydratePublicCache = useCallback(async () => {
+    try {
+      const cached = await readStorefrontCache();
+      if (cached) applyStorefrontSnapshot(cached);
+    } catch (error) {
+      console.warn('Could not read the storefront cache:', error?.message);
+    } finally {
+      publicCacheReady.current = true;
+    }
+  }, [applyStorefrontSnapshot]);
+
+  const hydratePublicStoreData = useCallback(async () => {
+    await hydratePublicCache();
+    await refreshPublicStoreData();
+  }, [hydratePublicCache, refreshPublicStoreData]);
+
   const apiError = useCallback((e) => {
     console.error('API request failed:', e?.message);
     setStatus('error');
@@ -100,13 +188,24 @@ export function AdminProvider({ children }) {
     let alive = true;
     (async () => {
       try {
+        const cacheHydration = initialAdminHint.current
+          ? Promise.resolve()
+          : hydratePublicCache();
         const me = await api('/api/auth/me').catch(() => null);
         if (!alive) return;
         setIsLoggedIn(!!me?.admin);
         if (!me?.admin) {
           try { sessionStorage.removeItem(ADMIN_KEY); } catch {}
         }
-        await refreshStoreData();
+        if (me?.admin) {
+          await cacheHydration;
+          await refreshStoreData();
+        }
+        else if (initialAdminHint.current) await hydratePublicStoreData();
+        else {
+          await cacheHydration;
+          await refreshPublicStoreData();
+        }
         if (!alive) return;
       } catch (e) {
         console.error('Catalog load failed:', e?.message);
@@ -115,7 +214,29 @@ export function AdminProvider({ children }) {
       }
     })();
     return () => { alive = false; };
-  }, [refreshStoreData]);
+  }, [refreshStoreData, hydratePublicCache, hydratePublicStoreData, refreshPublicStoreData]);
+
+  useEffect(() => {
+    if (isLoggedIn) return undefined;
+    let timer;
+    const refreshIfVisible = () => {
+      if (publicCacheReady.current && document.visibilityState === 'visible') {
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+          refreshPublicStoreData().catch((error) => {
+            console.error('Storefront refresh failed:', error?.message);
+          });
+        }, 150);
+      }
+    };
+    window.addEventListener('focus', refreshIfVisible);
+    document.addEventListener('visibilitychange', refreshIfVisible);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('focus', refreshIfVisible);
+      document.removeEventListener('visibilitychange', refreshIfVisible);
+    };
+  }, [isLoggedIn, refreshPublicStoreData]);
 
   const addCategory = useCallback((category) => {
     if (
@@ -186,17 +307,25 @@ export function AdminProvider({ children }) {
       await api('/api/auth/login', { method: 'POST', body: { email, password } });
       setIsLoggedIn(true);
       try { sessionStorage.setItem(ADMIN_KEY, '1'); } catch {}
-      return true;
     } catch {
       return false;
     }
-  }, []);
+    try {
+      await refreshStoreData();
+    } catch (error) {
+      apiError(error);
+    }
+    return true;
+  }, [apiError, refreshStoreData]);
 
   const logout = useCallback(async () => {
     setIsLoggedIn(false);
     try { sessionStorage.removeItem(ADMIN_KEY); } catch {}
     api('/api/auth/logout', { method: 'POST' }).catch(() => {});
-  }, []);
+    hydratePublicStoreData().catch((error) => {
+      console.error('Storefront refresh after logout failed:', error?.message);
+    });
+  }, [hydratePublicStoreData]);
 
   const addProduct = useCallback(async (product) => {
     try {

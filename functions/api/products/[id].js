@@ -15,16 +15,22 @@ export async function onRequestPut(context) {
   if (!exists) return bad('Product not found.', 404);
 
   const doc = { ...body, id };
-  await context.env.DB
+  const updated = await context.env.DB
     .prepare('UPDATE products SET data = ? WHERE id = ?')
     .bind(JSON.stringify(doc), id)
     .run();
+  if (!updated.meta?.changes) return bad('Product not found.', 404);
   return json({ ok: true, product: doc });
 }
 
 export async function onRequestDelete(context) {
   if (!(await requireAdmin(context))) return bad('Unauthorized.', 401);
-  const result = await context.env.DB.prepare('DELETE FROM products WHERE id = ?').bind(context.params.id).run();
+  const exists = await context.env.DB.prepare('SELECT id FROM products WHERE id = ?').bind(context.params.id).first();
+  if (!exists) return bad('Product not found.', 404);
+  const result = await context.env.DB
+    .prepare('DELETE FROM products WHERE id = ?')
+    .bind(context.params.id)
+    .run();
   if (!result.meta?.changes) return bad('Product not found.', 404);
   return json({ ok: true });
 }

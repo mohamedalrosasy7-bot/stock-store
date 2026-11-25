@@ -1,6 +1,6 @@
 -- stock-store D1 schema
--- Local:  npx wrangler d1 migrations execute stock-store-db --local  --file schema.sql
--- Remote: npx wrangler d1 migrations execute stock-store-db --remote --file schema.sql
+-- Local:  npx wrangler d1 execute stock-store-db --local  --file=schema.sql
+-- Remote: npx wrangler d1 execute stock-store-db --remote --file=schema.sql
 
 PRAGMA foreign_keys = ON;
 
@@ -61,3 +61,114 @@ CREATE INDEX IF NOT EXISTS idx_products_position  ON products (position);
 CREATE INDEX IF NOT EXISTS idx_categories_position ON categories (position);
 CREATE INDEX IF NOT EXISTS idx_orders_created     ON orders (created_at);
 CREATE INDEX IF NOT EXISTS idx_orders_status      ON orders (status);
+
+-- Keep the storefront cache version in sync with all catalog-facing D1 writes,
+-- including seed scripts and direct SQL maintenance.
+CREATE TRIGGER IF NOT EXISTS products_catalog_version_insert
+AFTER INSERT ON products
+BEGIN
+  INSERT INTO settings (key, value) VALUES ('catalogVersion', '1')
+  ON CONFLICT(key) DO UPDATE
+  SET value = CAST(CAST(settings.value AS INTEGER) + 1 AS TEXT);
+END;
+
+CREATE TRIGGER IF NOT EXISTS products_catalog_version_update
+AFTER UPDATE ON products
+WHEN OLD.data IS NOT NEW.data OR OLD.position IS NOT NEW.position
+BEGIN
+  INSERT INTO settings (key, value) VALUES ('catalogVersion', '1')
+  ON CONFLICT(key) DO UPDATE
+  SET value = CAST(CAST(settings.value AS INTEGER) + 1 AS TEXT);
+END;
+
+CREATE TRIGGER IF NOT EXISTS products_catalog_version_delete
+AFTER DELETE ON products
+BEGIN
+  INSERT INTO settings (key, value) VALUES ('catalogVersion', '1')
+  ON CONFLICT(key) DO UPDATE
+  SET value = CAST(CAST(settings.value AS INTEGER) + 1 AS TEXT);
+END;
+
+CREATE TRIGGER IF NOT EXISTS categories_catalog_version_insert
+AFTER INSERT ON categories
+BEGIN
+  INSERT INTO settings (key, value) VALUES ('catalogVersion', '1')
+  ON CONFLICT(key) DO UPDATE
+  SET value = CAST(CAST(settings.value AS INTEGER) + 1 AS TEXT);
+END;
+
+CREATE TRIGGER IF NOT EXISTS categories_catalog_version_update
+AFTER UPDATE ON categories
+WHEN OLD.data IS NOT NEW.data OR OLD.position IS NOT NEW.position
+BEGIN
+  INSERT INTO settings (key, value) VALUES ('catalogVersion', '1')
+  ON CONFLICT(key) DO UPDATE
+  SET value = CAST(CAST(settings.value AS INTEGER) + 1 AS TEXT);
+END;
+
+CREATE TRIGGER IF NOT EXISTS categories_catalog_version_delete
+AFTER DELETE ON categories
+BEGIN
+  INSERT INTO settings (key, value) VALUES ('catalogVersion', '1')
+  ON CONFLICT(key) DO UPDATE
+  SET value = CAST(CAST(settings.value AS INTEGER) + 1 AS TEXT);
+END;
+
+CREATE TRIGGER IF NOT EXISTS shop_ads_catalog_version_insert
+AFTER INSERT ON shop_ads
+BEGIN
+  INSERT INTO settings (key, value) VALUES ('catalogVersion', '1')
+  ON CONFLICT(key) DO UPDATE
+  SET value = CAST(CAST(settings.value AS INTEGER) + 1 AS TEXT);
+END;
+
+CREATE TRIGGER IF NOT EXISTS shop_ads_catalog_version_update
+AFTER UPDATE ON shop_ads
+WHEN OLD.data IS NOT NEW.data
+BEGIN
+  INSERT INTO settings (key, value) VALUES ('catalogVersion', '1')
+  ON CONFLICT(key) DO UPDATE
+  SET value = CAST(CAST(settings.value AS INTEGER) + 1 AS TEXT);
+END;
+
+CREATE TRIGGER IF NOT EXISTS shop_ads_catalog_version_delete
+AFTER DELETE ON shop_ads
+BEGIN
+  INSERT INTO settings (key, value) VALUES ('catalogVersion', '1')
+  ON CONFLICT(key) DO UPDATE
+  SET value = CAST(CAST(settings.value AS INTEGER) + 1 AS TEXT);
+END;
+
+CREATE TRIGGER IF NOT EXISTS settings_catalog_version_insert
+AFTER INSERT ON settings
+WHEN NEW.key <> 'catalogVersion'
+BEGIN
+  INSERT INTO settings (key, value) VALUES ('catalogVersion', '1')
+  ON CONFLICT(key) DO UPDATE
+  SET value = CAST(CAST(settings.value AS INTEGER) + 1 AS TEXT);
+END;
+
+CREATE TRIGGER IF NOT EXISTS settings_catalog_version_update
+AFTER UPDATE ON settings
+WHEN (OLD.key <> 'catalogVersion' OR NEW.key <> 'catalogVersion')
+  AND (OLD.key IS NOT NEW.key OR OLD.value IS NOT NEW.value)
+BEGIN
+  INSERT INTO settings (key, value) VALUES ('catalogVersion', '1')
+  ON CONFLICT(key) DO UPDATE
+  SET value = CAST(CAST(settings.value AS INTEGER) + 1 AS TEXT);
+END;
+
+CREATE TRIGGER IF NOT EXISTS settings_catalog_version_delete
+AFTER DELETE ON settings
+WHEN OLD.key <> 'catalogVersion'
+BEGIN
+  INSERT INTO settings (key, value) VALUES ('catalogVersion', '1')
+  ON CONFLICT(key) DO UPDATE
+  SET value = CAST(CAST(settings.value AS INTEGER) + 1 AS TEXT);
+END;
+
+-- Invalidate snapshots created by earlier catalog implementations whenever
+-- this schema is applied.
+INSERT INTO settings (key, value) VALUES ('catalogVersion', '1')
+ON CONFLICT(key) DO UPDATE
+SET value = CAST(CAST(settings.value AS INTEGER) + 1 AS TEXT);

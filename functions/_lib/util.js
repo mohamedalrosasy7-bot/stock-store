@@ -104,6 +104,49 @@ export async function readJson(request) {
   }
 }
 
+export async function readJsonLimited(request, maxBytes) {
+  const contentLength = request.headers.get('content-length');
+  if (/^\d+$/.test(contentLength || '') && Number(contentLength) > maxBytes) {
+    return { error: 'too_large' };
+  }
+
+  const reader = request.body?.getReader();
+  if (!reader) return { error: 'invalid_json' };
+
+  const chunks = [];
+  let totalBytes = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      totalBytes += value.byteLength;
+      if (totalBytes > maxBytes) {
+        try {
+          await reader.cancel();
+        } catch (error) {
+          console.warn('Could not cancel an oversized request body:', error?.message);
+        }
+        return { error: 'too_large' };
+      }
+      chunks.push(value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+
+  const bytes = new Uint8Array(totalBytes);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  try {
+    return { value: JSON.parse(new TextDecoder().decode(bytes)) };
+  } catch {
+    return { error: 'invalid_json' };
+  }
+}
+
 // Very small per-isolate rate limiter (best-effort; D1 + edge make real limiting hard).
 const attempts = new Map();
 
