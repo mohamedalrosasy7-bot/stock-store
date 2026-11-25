@@ -282,7 +282,7 @@ p { margin: 0 0 1rem; }
 .footer-grid > div > a:hover { color: var(--text); }
 .footer-business-details { display: grid; gap: 0; }
 .footer-business-details > * { margin: 0; color: var(--muted); font-size: .88rem; line-height: 1; overflow-wrap: anywhere; }
-.footer-business-details strong { color: var(--text); font-weight: 700; }
+.footer-business-details strong { color: var(--text); font-weight: 700; margin-bottom: .5rem; }
 .footer-business-details a:hover { color: var(--text); }
 .footer-about,
 .footer-grid .footer-about,
