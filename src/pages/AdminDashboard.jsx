@@ -170,7 +170,6 @@ function AdminOfferCopy({ offerContent, onSave, t }) {
                         }))}
                       />
                     )}
-                    {key === 'title' && <small className="muted">{t('admin.offerPercentHint')}</small>}
                   </label>
                 ))}
               </div>

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { IMAGES, discountPercent, getCategoryName, sortByNewest } from '../data/products';
+import { IMAGES, getCategoryName, sortByNewest } from '../data/products';
 import { STORE } from '../config';
 import { useAdmin } from '../context/AdminContext';
 import { useLang } from '../context/LangContext';
@@ -28,12 +28,9 @@ export default function Home() {
   // createdAt, newest first); the "View all" arrow link leads to the rest.
   const newArrivals = sortByNewest(visible).slice(0, 6);
   const onSale = sortByNewest(visible.filter((p) => p.salePrice != null));
-  const maxOff = onSale.length ? Math.max(...onSale.map(discountPercent)) : 0;
   const heroSrc = heroImage || IMAGES.hero;
   const offerCopy = offerContent?.[lang] || {};
-  const offerTitle = offerCopy.title == null
-    ? t('home.offerTitle', { percent: maxOff })
-    : offerCopy.title.replace(/\{percent\}/g, String(maxOff));
+  const offerTitle = offerCopy.title ?? t('home.offerTitle');
   const reviews = t('reviews');
   const features = FEATURE_ICONS.map(({ icon, titleKey, textKey }) => ({
     icon,
