@@ -29,7 +29,7 @@ export default function Home() {
   const newArrivals = sortByNewest(visible).slice(0, 6);
   const onSale = sortByNewest(visible.filter((p) => p.salePrice != null));
   const heroSrc = heroImage || IMAGES.hero;
-  const offerCopy = offerContent?.[lang] || {};
+  const offerCopy = offerContent?.ar || offerContent?.en || {};
   const offerTitle = offerCopy.title ?? t('home.offerTitle');
   const reviews = t('reviews');
   const features = FEATURE_ICONS.map(({ icon, titleKey, textKey }) => ({
@@ -134,15 +134,15 @@ export default function Home() {
         <div className="offer-bg" style={{ '--img': `url(${JSON.stringify(offerImage || IMAGES.banner)})` }}>
           <div className="container offer-inner">
             {(offerCopy.eyebrow ?? t('home.specialOffer')) && (
-              <p className="eyebrow light">{offerCopy.eyebrow ?? t('home.specialOffer')}</p>
+              <p className="eyebrow light" dir="auto">{offerCopy.eyebrow ?? t('home.specialOffer')}</p>
             )}
-            {offerTitle && <h2>{offerTitle}</h2>}
+            {offerTitle && <h2 dir="auto">{offerTitle}</h2>}
             {(offerCopy.description ?? t('home.offerText')) && (
-              <p>{offerCopy.description ?? t('home.offerText')}</p>
+              <p dir="auto">{offerCopy.description ?? t('home.offerText')}</p>
             )}
             {(offerCopy.button ?? t('home.shopSale')) && (
               <Link to="/shop?sale=1" className="btn btn-light btn-lg">
-                {offerCopy.button ?? t('home.shopSale')} <ArrowIcon size={18} />
+                <span dir="auto">{offerCopy.button ?? t('home.shopSale')}</span> <ArrowIcon size={18} />
               </Link>
             )}
           </div>

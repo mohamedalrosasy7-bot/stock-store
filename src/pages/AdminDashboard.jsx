@@ -16,18 +16,10 @@ const OFFER_COPY_FIELDS = [
   { key: 'button', label: 'admin.offerButton', maxLength: 100 },
 ];
 const DEFAULT_OFFER_COPY = {
-  ar: {
-    eyebrow: resources.ar.home.specialOffer,
-    title: resources.ar.home.offerTitle,
-    description: resources.ar.home.offerText,
-    button: resources.ar.home.shopSale,
-  },
-  en: {
-    eyebrow: resources.en.home.specialOffer,
-    title: resources.en.home.offerTitle,
-    description: resources.en.home.offerText,
-    button: resources.en.home.shopSale,
-  },
+  eyebrow: resources.ar.home.specialOffer,
+  title: resources.ar.home.offerTitle,
+  description: resources.ar.home.offerText,
+  button: resources.ar.home.shopSale,
 };
 
 function AdminImageSetting({ image, defaultImage, title, hint, changeLabel, restoreLabel, onSave, t }) {
@@ -111,19 +103,17 @@ function AdminOfferCopy({ offerContent, onSave, t }) {
   const [draft, setDraft] = useState({});
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
-  const valueFor = (locale, key) =>
-    draft[locale]?.[key] ?? offerContent?.[locale]?.[key] ?? DEFAULT_OFFER_COPY[locale][key];
+  const valueFor = (key) =>
+    draft[key] ?? offerContent?.shared?.[key] ?? offerContent?.ar?.[key] ??
+    offerContent?.en?.[key] ?? DEFAULT_OFFER_COPY[key];
 
   const save = async (event) => {
     event.preventDefault();
     setSaving(true);
     setSaveError('');
-    const content = Object.fromEntries(['ar', 'en'].map((locale) => [
-      locale,
-      Object.fromEntries(OFFER_COPY_FIELDS.map(({ key }) => [key, valueFor(locale, key)])),
-    ]));
+    const content = Object.fromEntries(OFFER_COPY_FIELDS.map(({ key }) => [key, valueFor(key)]));
     try {
-      await onSave(content);
+      await onSave({ ar: content, en: content });
       setDraft(content);
     } catch {
       setSaveError('admin.offerCopySaveFailed');
@@ -141,39 +131,28 @@ function AdminOfferCopy({ offerContent, onSave, t }) {
         </div>
       </div>
       <form onSubmit={save}>
-        <div className="admin-offer-copy-grid">
-          {['ar', 'en'].map((locale) => (
-            <fieldset key={locale} className="admin-offer-copy-locale" dir={locale === 'ar' ? 'rtl' : 'ltr'}>
-              <legend>{t(locale === 'ar' ? 'admin.offerArabic' : 'admin.offerEnglish')}</legend>
-              <div className="admin-offer-copy-fields">
-                {OFFER_COPY_FIELDS.map(({ key, label, maxLength }) => (
-                  <label key={key} className="admin-field">
-                    <span>{t(label)}</span>
-                    {key === 'description' ? (
-                      <textarea
-                        rows={3}
-                        maxLength={maxLength}
-                        value={valueFor(locale, key)}
-                        onChange={(event) => setDraft((current) => ({
-                          ...current,
-                          [locale]: { ...(current[locale] || {}), [key]: event.target.value },
-                        }))}
-                      />
-                    ) : (
-                      <input
-                        type="text"
-                        maxLength={maxLength}
-                        value={valueFor(locale, key)}
-                        onChange={(event) => setDraft((current) => ({
-                          ...current,
-                          [locale]: { ...(current[locale] || {}), [key]: event.target.value },
-                        }))}
-                      />
-                    )}
-                  </label>
-                ))}
-              </div>
-            </fieldset>
+        <div className="admin-offer-copy-fields">
+          {OFFER_COPY_FIELDS.map(({ key, label, maxLength }) => (
+            <label key={key} className="admin-field">
+              <span>{t(label)}</span>
+              {key === 'description' ? (
+                <textarea
+                  dir="auto"
+                  rows={3}
+                  maxLength={maxLength}
+                  value={valueFor(key)}
+                  onChange={(event) => setDraft((current) => ({ ...current, [key]: event.target.value }))}
+                />
+              ) : (
+                <input
+                  dir="auto"
+                  type="text"
+                  maxLength={maxLength}
+                  value={valueFor(key)}
+                  onChange={(event) => setDraft((current) => ({ ...current, [key]: event.target.value }))}
+                />
+              )}
+            </label>
           ))}
         </div>
         {saveError && <p className="admin-field-error" role="alert">{t(saveError)}</p>}
