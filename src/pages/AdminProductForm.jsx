@@ -5,7 +5,7 @@ import { useLang } from '../context/LangContext';
 import { SEASONS, getCategoryName, normalizeSeason, productImages } from '../data/products';
 import { uploadStoreImage, isAllowedImage, purgeCloudinaryImages } from '../lib/images';
 import { deleteImage } from '../lib/api';
-import { money } from '../config';
+import { cloudinaryUrl, money } from '../config';
 import { CloseIcon, ArrowIcon } from '../components/Icons';
 
 const LETTER_SIZE_OPTIONS = ['M', 'L', 'XL', '2XL', '3XL'];
@@ -397,7 +397,7 @@ export default function AdminProductForm() {
                   <div className="admin-color-images">
                     {(c.images || []).map((src, imageIndex) => (
                       <div key={`${src.slice(0, 30)}-${imageIndex}`} className="admin-color-image">
-                        <img src={src} alt={`${c.name} ${imageIndex + 1}`} />
+                        <img src={cloudinaryUrl(src, { width: 240 })} alt={`${c.name} ${imageIndex + 1}`} />
                         <button type="button" onClick={() => removeColorImage(i, imageIndex)} aria-label={t('admin.removeImage')}>
                           <CloseIcon size={12} />
                         </button>
@@ -497,7 +497,7 @@ export default function AdminProductForm() {
             <div className="admin-image-grid">
               {form.images.map((src, i) => (
                 <div key={i} className="admin-image-item">
-                  <img src={src} alt={t('admin.imageAlt', { index: i + 1 })} />
+                  <img src={cloudinaryUrl(src, { width: 240 })} alt={t('admin.imageAlt', { index: i + 1 })} />
                   <div className="admin-image-tools">
                     <button type="button" onClick={() => moveImage(i, -1)} disabled={i === 0} aria-label={t('admin.moveLeft')}><ArrowIcon size={14} style={{ transform: 'rotate(180deg)' }} /></button>
                     <span>{i + 1}</span>

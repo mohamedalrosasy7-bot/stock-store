@@ -50,7 +50,13 @@ export default function Cart() {
           {lines.map((l) => (
             <div key={l.key} className="cart-line">
               <Link to={`/product/${l.product.id}`} className="cart-img">
-                <ProductImage src={lineImage(l)} alt={l.product.name} />
+                <ProductImage
+                  src={lineImage(l)}
+                  alt={l.product.name}
+                  cloudinaryWidth={240}
+                  cloudinaryWidths={[160, 240]}
+                  sizes="(max-width: 600px) 64px, 110px"
+                />
               </Link>
               <div className="cart-info">
                 <Link to={`/product/${l.product.id}`} className="card-title">{l.product.name}</Link>

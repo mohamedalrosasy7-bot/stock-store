@@ -1,7 +1,7 @@
 import { useMemo, useEffect, useState } from 'react';
 import { useLang } from '../context/LangContext';
 import { useOrders } from '../context/OrdersContext';
-import { STORE, money } from '../config';
+import { cloudinarySrcSet, cloudinaryUrl, STORE, money } from '../config';
 import { ClockIcon, PackageIcon, SearchIcon, TrashIcon, TruckIcon, WhatsAppIcon } from '../components/Icons';
 
 const STATUS_CLASS = { new: 'new', shipped: 'shipped', delivered: 'delivered' };
@@ -173,7 +173,7 @@ export default function AdminOrders() {
                                   aria-label={t('admin.viewImage')}
                                   title={t('admin.viewImage')}
                                 >
-                                  <img className="admin-order-item-img" src={i.image} alt={i.name} loading="lazy" decoding="async" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                                  <img className="admin-order-item-img" src={cloudinaryUrl(i.image, { width: 240 })} srcSet={cloudinarySrcSet(i.image, [120, 240])} sizes="60px" alt={i.name} loading="lazy" decoding="async" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                                 </button>
                               ) : null}
                               {i.qty}× {i.name}
@@ -253,7 +253,7 @@ export default function AdminOrders() {
                               aria-label={t('admin.viewImage')}
                               title={t('admin.viewImage')}
                             >
-                              <img className="admin-order-item-img" src={i.image} alt={i.name} loading="lazy" decoding="async" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                              <img className="admin-order-item-img" src={cloudinaryUrl(i.image, { width: 240 })} srcSet={cloudinarySrcSet(i.image, [120, 240])} sizes="60px" alt={i.name} loading="lazy" decoding="async" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                             </button>
                           ) : null}
                           {i.qty}× {i.name}
@@ -308,7 +308,7 @@ export default function AdminOrders() {
       {preview && (
         <div className="admin-lightbox" role="dialog" aria-modal="true" aria-label={t('admin.viewImage')} onClick={() => setPreview(null)}>
           <button type="button" className="admin-lightbox-close" aria-label={t('admin.closeImage')} onClick={(e) => { e.stopPropagation(); setPreview(null); }}>×</button>
-          <img src={preview.src} alt={preview.alt} onClick={(e) => e.stopPropagation()} />
+          <img src={cloudinaryUrl(preview.src, { width: 1200 })} srcSet={cloudinarySrcSet(preview.src, [480, 800, 1200])} sizes="(max-width: 600px) 100vw, 80vw" alt={preview.alt} onClick={(e) => e.stopPropagation()} />
         </div>
       )}
     </div>

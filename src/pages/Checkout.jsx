@@ -219,7 +219,13 @@ export default function Checkout() {
             {lines.map((l) => (
               <li key={l.key}>
                 <div className="summary-img">
-                  <ProductImage src={lineImage(l)} alt={l.product.name} />
+                  <ProductImage
+                    src={lineImage(l)}
+                    alt={l.product.name}
+                    cloudinaryWidth={240}
+                    cloudinaryWidths={[160, 240]}
+                    sizes="48px"
+                  />
                   <span className="qty-badge">{l.qty}</span>
                 </div>
                 <div>

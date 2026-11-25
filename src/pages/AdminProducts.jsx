@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAdmin } from '../context/AdminContext';
 import { useLang } from '../context/LangContext';
 import { SEASONS, coverImage, getCategoryName, normalizeSeason, sortByNewest } from '../data/products';
-import { money } from '../config';
+import { cloudinaryUrl, money } from '../config';
 import { EditIcon, TrashIcon, EyeIcon, EyeOffIcon, PlusIcon, SearchIcon } from '../components/Icons';
 
 const SORT_OPTIONS = [
@@ -209,7 +209,7 @@ export default function AdminProducts() {
                     <td>
                       <div className="admin-product-cell">
                         {firstImage(p)
-                          ? <img src={firstImage(p)} alt={p.name} className="admin-table-img" />
+                          ? <img src={cloudinaryUrl(firstImage(p), { width: 240 })} alt={p.name} className="admin-table-img" />
                           : <div className="admin-table-img" aria-label={t('admin.noProductImage')} />}
                         <div className="admin-product-meta">
                           <span className="admin-table-name">{p.name}</span>
@@ -282,7 +282,7 @@ export default function AdminProducts() {
             return (
               <div key={p.id} className="admin-product-card">
                 {firstImage(p)
-                  ? <img src={firstImage(p)} alt={p.name} className="admin-product-card-img" />
+                  ? <img src={cloudinaryUrl(firstImage(p), { width: 240 })} alt={p.name} className="admin-product-card-img" />
                   : <div className="admin-product-card-img" aria-label={t('admin.noProductImage')} />}
                 <div className="admin-product-card-body">
                   <div className="admin-product-card-top">

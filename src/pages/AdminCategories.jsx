@@ -4,6 +4,7 @@ import { useLang } from '../context/LangContext';
 import { IMAGES, getCategoryName } from '../data/products';
 import { isAllowedImage, uploadStoreImage } from '../lib/images';
 import { ArrowIcon, ImageIcon, PlusIcon, TrashIcon } from '../components/Icons';
+import { cloudinaryUrl } from '../config';
 
 const EMPTY_CATEGORY = { label: '', labelAr: '', image: '' };
 const MAX_IMAGE_SIZE = 1024 * 1024;
@@ -180,7 +181,7 @@ export default function AdminCategories() {
           </label>
           <label className="admin-category-upload">
             {newCategory.image
-              ? <img className="admin-category-upload-preview" src={newCategory.image} alt="" />
+              ? <img className="admin-category-upload-preview" src={cloudinaryUrl(newCategory.image, { width: 240 })} alt="" />
               : <ImageIcon size={19} />}
             <span>{t('admin.categoryImageOptional')}</span>
             <input
@@ -207,7 +208,7 @@ export default function AdminCategories() {
           return (
             <article key={category.id} data-category-id={category.id} className="admin-card admin-category-card">
               <div className="admin-category-visual">
-                <img className="admin-category-preview" src={image} alt={getCategoryName(category, lang)} />
+                <img className="admin-category-preview" src={cloudinaryUrl(image, { width: 360 })} alt={getCategoryName(category, lang)} />
               </div>
               <div className="admin-category-fields">
                 <div className="admin-category-meta">

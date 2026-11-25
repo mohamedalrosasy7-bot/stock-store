@@ -3,6 +3,7 @@ import { useAdmin } from '../context/AdminContext';
 import { useLang } from '../context/LangContext';
 import { isAllowedImage, uploadStoreImage } from '../lib/images';
 import { ArrowIcon, EyeIcon, EyeOffIcon, ImageIcon, PlusIcon, TrashIcon } from '../components/Icons';
+import { cloudinaryUrl } from '../config';
 
 export default function AdminAds() {
   const { t } = useLang();
@@ -103,7 +104,7 @@ export default function AdminAds() {
               const active = banner.active !== false;
               return (
                 <article key={banner.id} className={`admin-ad-item ${active ? '' : 'is-inactive'}`}>
-                  <img src={banner.src} alt={banner.name || t('admin.adPreview')} />
+                  <img src={cloudinaryUrl(banner.src, { width: 360 })} alt={banner.name || t('admin.adPreview')} />
                   <div className="admin-ad-item-info">
                     <strong>{banner.name || t('admin.advertisementN', { index: index + 1 })}</strong>
                     <span>{active ? t('admin.includedInSlider') : t('admin.hiddenFromSlider')}</span>

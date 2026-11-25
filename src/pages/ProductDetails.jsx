@@ -224,7 +224,13 @@ function Details({ product, categories }) {
                 onClick={() => selectImage(i)}
                 aria-label={t('product.viewImage', { index: i + 1 })}
               >
-                <ProductImage src={src} alt={`${product.name} view ${i + 1}`} />
+                <ProductImage
+                  src={src}
+                  alt={`${product.name} view ${i + 1}`}
+                  cloudinaryWidth={240}
+                  cloudinaryWidths={[120, 240]}
+                  sizes="(max-width: 600px) 56px, 84px"
+                />
                 {thumbSoldOut && <span className="badge badge-sold-out">{t('admin.soldOut')}</span>}
               </button>
                 );
@@ -238,7 +244,14 @@ function Details({ product, categories }) {
             onTouchCancel={() => { touchStartX.current = null; }}
           >
             {activeImages.length ? (
-              <ProductImage src={activeImages[img % activeImages.length]} alt={`${product.name} - ${selectedVariant?.color || ''}`} loading="eager" />
+              <ProductImage
+                src={activeImages[img % activeImages.length]}
+                alt={`${product.name} - ${selectedVariant?.color || ''}`}
+                cloudinaryWidth={1200}
+                cloudinaryWidths={[480, 720, 1200]}
+                sizes="(max-width: 600px) 92vw, (max-width: 900px) 50vw, 600px"
+                loading="eager"
+              />
             ) : (
               <ProductImage src="" alt={product.name} loading="eager" />
             )}
