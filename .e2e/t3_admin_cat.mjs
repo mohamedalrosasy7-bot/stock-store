@@ -40,6 +40,17 @@ export default async function t3({ page, results, ok }) {
   ok('cat: success toast', await exists(page, '.admin-toast--success'));
   const categoryData = await page.evaluate(async () => (await fetch('/api/categories')).json());
   ok('cat: persisted in D1', categoryData.categories?.some((category) => category.id === 'e2e-cat'));
+  const movedUp = await page.evaluate(() => {
+    const card = [...document.querySelectorAll('.admin-category-card')].find((item) => item.innerText.includes('e2e-cat'));
+    const button = card?.querySelector('.admin-category-move-up');
+    if (!button || button.disabled) return false;
+    button.click();
+    return true;
+  });
+  await sleep(800);
+  const reorderedCategoryData = await page.evaluate(async () => (await fetch('/api/categories')).json());
+  const reorderedIndex = reorderedCategoryData.categories?.findIndex((category) => category.id === 'e2e-cat');
+  ok('cat: order change persisted', movedUp && reorderedIndex === reorderedCategoryData.categories.length - 2);
 
   // storefront reflects new category
   await go(page, '/');

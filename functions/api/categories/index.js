@@ -21,9 +21,13 @@ export async function onRequestPost(context) {
   if (exists) return bad('A category with this id already exists.', 409);
 
   const doc = { ...body, id: body.id };
+  const positionRow = await context.env.DB
+    .prepare('SELECT MIN(position) AS position FROM categories')
+    .first();
+  const position = (positionRow?.position ?? 0) - 1;
   await context.env.DB
     .prepare('INSERT INTO categories (id, data, position) VALUES (?, ?, ?)')
-    .bind(body.id, JSON.stringify(doc), Date.now())
+    .bind(body.id, JSON.stringify(doc), position)
     .run();
   return json({ ok: true, category: doc }, { status: 201 });
 }

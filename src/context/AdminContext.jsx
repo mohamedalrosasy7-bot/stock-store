@@ -62,6 +62,7 @@ export function AdminProvider({ children }) {
   });
 
   const [categories, setCategories] = useState(() => CATEGORIES.map(normalizeCategory));
+  const [isCategoryReordering, setIsCategoryReordering] = useState(false);
   const [products, setProducts] = useState(initialProducts);
   const [shopAds, setShopAds] = useState({ enabled: true, banners: DEFAULT_AD_BANNERS });
   const [status, setStatus] = useState(null); // 'loading' | 'success' | 'error'
@@ -302,6 +303,39 @@ export function AdminProvider({ children }) {
     return true;
   }, [categories, products, apiError]);
 
+  const moveCategory = useCallback(async (id, direction) => {
+    if (isCategoryReordering) return false;
+    const index = categories.findIndex((category) => category.id === id);
+    const target = index + direction;
+    if (index < 0 || target < 0 || target >= categories.length) return false;
+
+    const reordered = [...categories];
+    [reordered[index], reordered[target]] = [reordered[target], reordered[index]];
+    setIsCategoryReordering(true);
+    setCategories(reordered);
+    try {
+      await api('/api/categories/reorder', {
+        method: 'PUT',
+        body: { ids: reordered.map((category) => category.id) },
+      });
+      setStatus('success');
+      setStatusMsg('admin.toastCategoryOrderUpdated');
+      return true;
+    } catch (error) {
+      const previousIds = categories.map((category) => category.id);
+      setCategories((current) => {
+        const byId = new Map(current.map((category) => [category.id, category]));
+        const ordered = previousIds.map((categoryId) => byId.get(categoryId)).filter(Boolean);
+        const included = new Set(previousIds);
+        return [...ordered, ...current.filter((category) => !included.has(category.id))];
+      });
+      apiError(error);
+      return false;
+    } finally {
+      setIsCategoryReordering(false);
+    }
+  }, [apiError, categories, isCategoryReordering]);
+
   const login = useCallback(async (email, password) => {
     try {
       await api('/api/auth/login', { method: 'POST', body: { email, password } });
@@ -448,6 +482,8 @@ export function AdminProvider({ children }) {
     addCategory,
     updateCategory,
     deleteCategory,
+    moveCategory,
+    isCategoryReordering,
     products,
     shopAds,
     addProduct,

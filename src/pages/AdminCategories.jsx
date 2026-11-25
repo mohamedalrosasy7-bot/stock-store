@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useAdmin } from '../context/AdminContext';
 import { useLang } from '../context/LangContext';
 import { IMAGES, getCategoryName } from '../data/products';
 import { isAllowedImage, uploadStoreImage } from '../lib/images';
-import { ImageIcon, PlusIcon, TrashIcon } from '../components/Icons';
+import { ArrowIcon, ImageIcon, PlusIcon, TrashIcon } from '../components/Icons';
 
 const EMPTY_CATEGORY = { label: '', labelAr: '', image: '' };
 const MAX_IMAGE_SIZE = 1024 * 1024;
@@ -28,6 +28,8 @@ export default function AdminCategories() {
     addCategory,
     updateCategory,
     deleteCategory,
+    moveCategory,
+    isCategoryReordering,
     status,
     statusMsg,
     clearStatus,
@@ -35,12 +37,39 @@ export default function AdminCategories() {
   const [newCategory, setNewCategory] = useState(EMPTY_CATEGORY);
   const [drafts, setDrafts] = useState({});
   const [uploadError, setUploadError] = useState('');
+  const categoryListRef = useRef(null);
+  const categoryPositions = useRef(new Map());
 
   useEffect(() => {
     if (!status) return undefined;
     const timer = setTimeout(clearStatus, 1500);
     return () => clearTimeout(timer);
   }, [status, clearStatus]);
+
+  useLayoutEffect(() => {
+    const cards = categoryListRef.current?.querySelectorAll('[data-category-id]') || [];
+    const nextPositions = new Map();
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    cards.forEach((card) => {
+      const { categoryId } = card.dataset;
+      const rect = card.getBoundingClientRect();
+      const previous = categoryPositions.current.get(categoryId);
+      if (isCategoryReordering && previous && !reduceMotion && typeof card.animate === 'function') {
+        const deltaX = previous.left - rect.left;
+        const deltaY = previous.top - rect.top;
+        if (deltaX || deltaY) {
+          card.animate(
+            [{ transform: `translate(${deltaX}px, ${deltaY}px)` }, { transform: 'translate(0, 0)' }],
+            { duration: 280, easing: 'cubic-bezier(0.2, 0, 0, 1)' },
+          );
+        }
+      }
+      nextPositions.set(categoryId, { left: rect.left, top: rect.top });
+    });
+
+    categoryPositions.current = nextPositions;
+  }, [categories, isCategoryReordering]);
 
   const setDraft = (id, field, value) => {
     setDrafts((current) => ({
@@ -115,7 +144,11 @@ export default function AdminCategories() {
           <h2>{t('admin.categories')}</h2>
           <p className="admin-page-sub">{t('admin.manageCategoriesHint')}</p>
         </div>
-        <span className="admin-category-count">{t('admin.categoryCount', { count: categories.length })}</span>
+        <span className="admin-category-count" aria-live="polite">
+          {isCategoryReordering
+            ? t('admin.savingCategoryOrder')
+            : t('admin.categoryCount', { count: categories.length })}
+        </span>
       </div>
 
       <form className="admin-card admin-category-create" onSubmit={saveNewCategory}>
@@ -164,15 +197,15 @@ export default function AdminCategories() {
         </button>
       </form>
 
-      <div className="admin-category-list">
-        {categories.map((category) => {
+      <div className="admin-category-list" ref={categoryListRef} aria-busy={isCategoryReordering}>
+        {categories.map((category, index) => {
           const draft = drafts[category.id] || category;
           const productCount = products.filter((product) => product.category === category.id).length;
           const canDelete = productCount === 0 && categories.length > 1;
           const image = draft.image || category.image || IMAGES.categories[category.id] || IMAGES.banner;
           const hasChanges = draft.label !== category.label || draft.labelAr !== category.labelAr || draft.image !== category.image;
           return (
-            <article key={category.id} className="admin-card admin-category-card">
+            <article key={category.id} data-category-id={category.id} className="admin-card admin-category-card">
               <div className="admin-category-visual">
                 <img className="admin-category-preview" src={image} alt={getCategoryName(category, lang)} />
               </div>
@@ -206,6 +239,28 @@ export default function AdminCategories() {
                   <button type="button" className="btn admin-category-save" onClick={() => saveCategory(category)} disabled={!hasChanges}>
                     {t('admin.saveCategory')}
                   </button>
+                  <div className="admin-category-order">
+                    <button
+                      type="button"
+                      className="admin-icon-btn admin-category-move-up"
+                      onClick={() => moveCategory(category.id, -1)}
+                      disabled={isCategoryReordering || index === 0}
+                      aria-label={t('admin.moveUpAria', { name: getCategoryName(category, lang) })}
+                      title={t('admin.moveUp')}
+                    >
+                      <ArrowIcon size={16} style={{ transform: 'rotate(-90deg)' }} />
+                    </button>
+                    <button
+                      type="button"
+                      className="admin-icon-btn admin-category-move-down"
+                      onClick={() => moveCategory(category.id, 1)}
+                      disabled={isCategoryReordering || index === categories.length - 1}
+                      aria-label={t('admin.moveDownAria', { name: getCategoryName(category, lang) })}
+                      title={t('admin.moveDown')}
+                    >
+                      <ArrowIcon size={16} style={{ transform: 'rotate(90deg)' }} />
+                    </button>
+                  </div>
                   <button
                     type="button"
                     className="btn btn-outline admin-category-delete"
