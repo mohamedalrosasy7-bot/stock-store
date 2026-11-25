@@ -220,8 +220,6 @@ export default {
     notFound: 'Order not found',
     notFoundHint: "We couldn't find an order with that number on this device.",
     line: '• {qty}× {name} ({size}, {color}) — {total}',
-    waProductId: 'Product ID',
-    waProductLink: 'Product link',
     waProductImage: 'Image link',
     hello: 'Hello {store}, I just placed order {id}.',
     waTotal: 'Total',

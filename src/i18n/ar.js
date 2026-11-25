@@ -220,8 +220,6 @@ export default {
     notFound: 'الطلب غير موجود',
     notFoundHint: 'لم نعثر على طلب بهذا الرقم على هذا الجهاز.',
     line: '• {qty}× {name} ({size}, {color}) — {total}',
-    waProductId: 'كود المنتج',
-    waProductLink: 'رابط المنتج',
     waProductImage: 'رابط الصورة',
     hello: 'مرحباً {store}، لقد طلبت للتو الطلب رقم {id}.',
     waTotal: 'الإجمالي',

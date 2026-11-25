@@ -15,14 +15,9 @@ const webUrl = (value) => {
 // the order-success page so both always carry the exact same text.
 export const buildCustomerWhatsAppLink = (order, t) => {
   const lines = order.items.map((item) => {
-    const productLink = item.id
-      ? new URL(`/#/product/${encodeURIComponent(item.id)}`, window.location.origin).href
-      : '';
     const imageLink = webUrl(item.image);
     return [
       t('order.line', { qty: item.qty, name: item.name, size: item.size, color: item.color, total: money(item.total) }),
-      item.id ? `${t('order.waProductId')}: ${item.id}` : '',
-      productLink ? `${t('order.waProductLink')}: ${productLink}` : '',
       imageLink ? `${t('order.waProductImage')}: ${imageLink}` : '',
     ].filter(Boolean).join('\n');
   }).join('\n');

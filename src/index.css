@@ -454,6 +454,7 @@ p { margin: 0 0 1rem; }
 .variant-row .option { min-width: 0; margin: 0; }
 .variant-row .option + .option { margin-top: 0; }
 .variant-row .option-label { margin-bottom: 0.35rem; font-size: 0.73rem; }
+.variant-row .variant-swatches { width: 100%; flex-wrap: wrap; align-content: flex-start; row-gap: 0.55rem; }
 .variant-row .swatches.big .swatch { width: 25px; height: 25px; }
 .variant-row .sizes.big .size { min-width: 38px; padding: 0.35rem 0.5rem; font-size: 0.73rem; }
 .variant-swatches.error { outline: 1px solid var(--danger); outline-offset: 4px; }
