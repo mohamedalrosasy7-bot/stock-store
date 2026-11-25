@@ -31,12 +31,12 @@ export default function Footer() {
             <span>OWNER : MR. Mohamed Alrosasy</span>
             <a href={`tel:${STORE.phone.replace(/\s/g, '')}`}>PHONE NUMBER: {STORE.phone}</a>
             <a href={`mailto:${STORE.email}`}>GMAIL: {STORE.email}</a>
-            <span lang="ar" dir="rtl">يومياً 1:00 ظهراً – 1:00 بعد منتصف الليل</span>
             <span>EST: 2022</span>
             <span>STATUS: ALWAYS At the top</span>
             <span>VIBE: 100% comfortable and elegant.</span>
             <span>Stock Store:Al-Mahmoudia, Beheira, El Mansheya, Metwally Sardina Street 📍</span>
             <span>Stock Shoes:Al-Mahmoudia, Beheira, El Mansheya, Borg El Shorouk Street 📍</span>
+            <span lang="ar" dir="rtl">يومياً 1:00 ظهراً – 1:00 بعد منتصف الليل</span>
           </div>
         </div>
         <div className="container footer-bottom">
