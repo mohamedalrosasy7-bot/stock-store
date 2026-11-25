@@ -1,5 +1,5 @@
 import { Link, useLocation, useParams } from 'react-router-dom';
-import { cloudinarySrcSet, cloudinaryUrl, money } from '../config';
+import { money } from '../config';
 import { useLang } from '../context/LangContext';
 import { useSEO } from '../hooks/useSEO';
 import { buildCustomerWhatsAppLink } from '../lib/whatsapp';
@@ -58,7 +58,7 @@ export default function OrderSuccess() {
         <ul className="summary-items">
           {order.items.map((i, idx) => (
             <li key={idx}>
-              <div className="summary-img"><img src={cloudinaryUrl(i.image, { width: 240 })} srcSet={cloudinarySrcSet(i.image, [120, 240])} sizes="48px" alt={i.name} onError={(e) => { e.currentTarget.style.visibility = 'hidden'; }} /><span className="qty-badge">{i.qty}</span></div>
+              <div className="summary-img"><img src={i.image} alt={i.name} onError={(e) => { e.currentTarget.style.visibility = 'hidden'; }} /><span className="qty-badge">{i.qty}</span></div>
               <div>
                 <strong>{i.name}</strong>
                 <span className="muted small">{i.size && i.size !== 'One Size' && `${i.size} · `}{i.color}</span>

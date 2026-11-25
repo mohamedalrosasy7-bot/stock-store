@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useAdmin } from '../context/AdminContext';
 import { useLang } from '../context/LangContext';
 import { Link } from 'react-router-dom';
-import { cloudinaryUrl, money } from '../config';
+import { money } from '../config';
 import { coverImage, getCategoryName, sortByNewest } from '../data/products';
 import { EditIcon, PackageIcon, TagIcon, UsersIcon, ClockIcon } from '../components/Icons';
 
@@ -111,7 +111,7 @@ export default function AdminDashboard() {
             {recent.map((p) => (
               <div key={p.id} className="admin-recent-item">
                 {firstImage(p)
-                  ? <img src={cloudinaryUrl(firstImage(p), { width: 240 })} alt={p.name} className="admin-recent-img" />
+                  ? <img src={firstImage(p)} alt={p.name} className="admin-recent-img" />
                   : <div className="admin-recent-img" aria-label={t('admin.noProductImage')} />}
                 <div className="admin-recent-info">
                   <span className="admin-recent-name">{p.name}</span>

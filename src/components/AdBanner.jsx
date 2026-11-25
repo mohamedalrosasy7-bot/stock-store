@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAdmin } from '../context/AdminContext';
 import { useLang } from '../context/LangContext';
-import { cloudinarySrcSet, cloudinaryUrl } from '../config';
 
 export default function AdBanner() {
   const { t } = useLang();
@@ -56,9 +55,7 @@ export default function AdBanner() {
         <>
           <img
             key={banner.id}
-            src={cloudinaryUrl(banner.src, { width: 1200 })}
-            srcSet={cloudinarySrcSet(banner.src, [480, 800, 1200])}
-            sizes="100vw"
+            src={banner.src}
             alt={banner.name || t('admin.advertisements')}
             className="shop-ad-image"
           />

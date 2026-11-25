@@ -1,15 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { cloudinarySrcSet, cloudinaryUrl } from '../config';
 
-export default function ProductImage({
-  src,
-  alt,
-  className = '',
-  cloudinaryWidth = 700,
-  cloudinaryWidths = [480, 700],
-  sizes = '100vw',
-  ...rest
-}) {
+export default function ProductImage({ src, alt, className = '', ...rest }) {
   const [state, setState] = useState('loading');
   const ref = useRef(null);
 
@@ -27,9 +18,7 @@ export default function ProductImage({
       {state !== 'error' && (
         <img
           ref={ref}
-          src={cloudinaryUrl(src, { width: cloudinaryWidth })}
-          srcSet={cloudinarySrcSet(src, cloudinaryWidths)}
-          sizes={sizes}
+          src={src}
           alt={alt}
           loading="lazy"
           decoding="async"

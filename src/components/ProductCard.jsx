@@ -7,7 +7,6 @@ import ProductImage from './ProductImage';
 import Price from './Price';
 import { BagIcon, HeartIcon } from './Icons';
 import { hasAvailableVariant } from '../data/variantAvailability';
-import { cloudinarySrcSet, cloudinaryUrl } from '../config';
 
 export default function ProductCard({ product }) {
   const { has, toggle } = useWishlist();
@@ -24,18 +23,11 @@ export default function ProductCard({ product }) {
     <article className={`card ${noAvailableVariant ? 'is-sold-out' : ''}`}>
       <div className="card-media">
         <Link to={link} aria-label={product.name}>
-          <ProductImage
-            src={gallery[0] || ''}
-            alt={product.name}
-            cloudinaryWidths={[360, 480, 700]}
-            sizes="(max-width: 600px) calc(48vw - 28px), (max-width: 1100px) 33vw, 25vw"
-          />
+          <ProductImage src={gallery[0] || ''} alt={product.name} />
           {gallery[1] && (
             <img
               className="card-alt"
-              src={cloudinaryUrl(gallery[1], { width: 700 })}
-              srcSet={cloudinarySrcSet(gallery[1], [360, 480, 700])}
-              sizes="(max-width: 600px) calc(48vw - 28px), (max-width: 1100px) 33vw, 25vw"
+              src={gallery[1]}
               alt=""
               aria-hidden="true"
               loading="lazy"
