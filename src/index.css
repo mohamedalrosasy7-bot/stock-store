@@ -280,6 +280,10 @@ p { margin: 0 0 1rem; }
 .footer h4 { font-family: var(--sans); font-size: 0.75rem; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 1rem; }
 .footer-grid > div > a, .footer-grid > div > span { display: block; font-size: 0.9rem; color: var(--muted); margin-bottom: 0.55rem; }
 .footer-grid > div > a:hover { color: var(--text); }
+.footer-business-details { display: grid; gap: .55rem; }
+.footer-business-details > * { margin: 0; color: var(--muted); font-size: .88rem; line-height: 1.55; overflow-wrap: anywhere; }
+.footer-business-details strong { color: var(--text); font-weight: 700; }
+.footer-business-details a:hover { color: var(--text); }
 .footer-about,
 .footer-grid .footer-about,
 .footer .footer-about {

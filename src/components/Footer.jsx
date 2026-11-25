@@ -26,16 +26,16 @@ export default function Footer() {
               <a href={STORE.social.tiktok} target="_blank" rel="noopener noreferrer" aria-label="TikTok"><TiktokIcon /></a>
             </div>
           </div>
-          <div>
-            <h4>{t('footer.contact')}</h4>
-            {STORE.stores.map((store) => (
-              <span key={store.key} className="footer-address">
-                {t(`footer.stores.${store.key}`)}: <bdi dir="rtl">المحمودية، البحيرة - {store.address}</bdi>
-              </span>
-            ))}
-            <a href={`tel:${STORE.phone.replace(/\s/g, '')}`}>{STORE.phone}</a>
-            <a href={`mailto:${STORE.email}`}>{STORE.email}</a>
-            <span>{t('footer.hours')}</span>
+          <div className="footer-business-details" dir="ltr" lang="en">
+            <strong>BRAND: STOCK STORE</strong>
+            <span>OWNER : MR. Mohamed Alrosasy</span>
+            <a href={`tel:${STORE.phone.replace(/\s/g, '')}`}>PHONE NUMBER: {STORE.phone}</a>
+            <a href={`mailto:${STORE.email}`}>GMAIL: {STORE.email}</a>
+            <span>EST: 2022</span>
+            <span>STATUS: ALWAYS At the top</span>
+            <span>VIBE: 100% comfortable and elegant.</span>
+            <span>Stock Store:Al-Mahmoudia, Beheira, El Mansheya, Metwally Sardina Street 📍</span>
+            <span>Stock Shoes:Al-Mahmoudia, Beheira, El Mansheya, Borg El Shorouk Street 📍</span>
           </div>
         </div>
         <div className="container footer-bottom">
