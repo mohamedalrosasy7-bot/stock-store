@@ -385,9 +385,8 @@ export default function AdminProductForm() {
                 [t('admin.letterSizes'), LETTER_SIZE_OPTIONS],
                 [t('admin.numberSizes'), NUMBER_SIZE_OPTIONS],
               ].map(([label, options]) => (
-                <div className="admin-size-option-group" key={label}>
-                  <span className="admin-size-option-label">{label}</span>
-                  <div className="admin-size-list" role="group" aria-label={label}>
+                <div key={label} role="group" aria-label={label}>
+                  <div className="admin-size-list">
                     {options.map((size) => {
                       const selected = form.sizes.some((current) => current.toLowerCase() === size.toLowerCase());
                       return (

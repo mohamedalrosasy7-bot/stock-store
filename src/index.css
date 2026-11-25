@@ -2524,8 +2524,6 @@ p { margin: 0 0 1rem; }
 .admin-stock-size-row.is-sold-out { border-color: color-mix(in srgb, var(--danger) 48%, var(--line)); background: color-mix(in srgb, var(--danger) 8%, var(--bg)); }
 .admin-stock-size-row.is-sold-out strong { color: var(--danger); text-decoration: line-through; }
 .admin-size-options { display: grid; gap: .65rem; }
-.admin-size-option-group { display: grid; gap: .3rem; }
-.admin-size-option-label { color: var(--muted); font-size: .72rem; }
 .admin-size-list { display: flex; flex-wrap: wrap; gap: .5rem; }
 .size-chip { padding: .5rem .95rem; border: 1px solid var(--line); border-radius: 999px; font-size: .82rem; background: var(--bg); color: var(--muted); transition: .18s; font-weight: 500; }
 .size-chip:hover { border-color: var(--accent); color: var(--text); }
