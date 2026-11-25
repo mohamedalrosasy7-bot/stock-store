@@ -65,6 +65,7 @@ export function AdminProvider({ children }) {
   const [isCategoryReordering, setIsCategoryReordering] = useState(false);
   const [products, setProducts] = useState(initialProducts);
   const [shopAds, setShopAds] = useState({ enabled: true, banners: DEFAULT_AD_BANNERS });
+  const [heroImage, setHeroImage] = useState('');
   const [status, setStatus] = useState(null); // 'loading' | 'success' | 'error'
   const [statusMsg, setStatusMsg] = useState('');
   const [hiddenSeasons, setHiddenSeasons] = useState({});
@@ -92,6 +93,7 @@ export function AdminProvider({ children }) {
     }
     setShopAds({ enabled: snapshot.ads.enabled !== false, banners: snapshot.ads.banners });
     setHiddenSeasons(snapshot.settings?.hiddenSeasons || {});
+    setHeroImage(snapshot.settings?.heroImage || '');
     if (verified) setCatalogLoaded(true);
   }, []);
 
@@ -109,6 +111,7 @@ export function AdminProvider({ children }) {
       setShopAds({ enabled: adsData.enabled !== false, banners: adsData.banners });
     }
     setHiddenSeasons(settingsData?.settings?.hiddenSeasons || {});
+    setHeroImage(settingsData?.settings?.heroImage || '');
   }, []);
 
   const refreshPublicStoreData = useCallback(async () => {
@@ -462,6 +465,18 @@ export function AdminProvider({ children }) {
       .catch(apiError);
   }, [hiddenSeasons, apiError]);
 
+  const updateHeroImage = useCallback(async (image) => {
+    try {
+      await api('/api/settings', { method: 'PUT', body: { heroImage: image } });
+      setHeroImage(image);
+      setStatus('success');
+      setStatusMsg('admin.toastHeroImageSaved');
+    } catch (error) {
+      apiError(error);
+      throw error;
+    }
+  }, [apiError]);
+
   const isSeasonHidden = useCallback(
     (season) => !!hiddenSeasons[normalizeSeason(season)],
     [hiddenSeasons]
@@ -486,6 +501,8 @@ export function AdminProvider({ children }) {
     isCategoryReordering,
     products,
     shopAds,
+    heroImage,
+    updateHeroImage,
     addProduct,
     updateProduct,
     deleteProduct,

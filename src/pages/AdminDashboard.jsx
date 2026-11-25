@@ -1,10 +1,13 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAdmin } from '../context/AdminContext';
 import { useLang } from '../context/LangContext';
 import { Link } from 'react-router-dom';
 import { money } from '../config';
-import { coverImage, getCategoryName, sortByNewest } from '../data/products';
+import { coverImage, getCategoryName, IMAGES, sortByNewest } from '../data/products';
 import { EditIcon, PackageIcon, TagIcon, UsersIcon, ClockIcon } from '../components/Icons';
+import { isAllowedImage, uploadStoreImage } from '../lib/images';
+
+const MAX_HERO_IMAGE_SIZE = 8 * 1024 * 1024;
 
 const STAT_CARDS = [
   { labelKey: 'admin.statTotalProducts', icon: <PackageIcon size={20} />, color: 'var(--accent)' },
@@ -15,7 +18,10 @@ const STAT_CARDS = [
 
 export default function AdminDashboard() {
   const { t, lang } = useLang();
-  const { products, categories, status, statusMsg, clearStatus } = useAdmin();
+  const { products, categories, heroImage, updateHeroImage, status, statusMsg, clearStatus } = useAdmin();
+  const heroInputRef = useRef(null);
+  const [heroUploadError, setHeroUploadError] = useState('');
+  const [heroUploading, setHeroUploading] = useState(false);
 
   // Same snappy auto-dismiss as the other admin pages (1.5s).
   useEffect(() => {
@@ -49,6 +55,40 @@ export default function AdminDashboard() {
     return cat ? getCategoryName(cat, lang) : id;
   };
   const firstImage = coverImage;
+  const handleHeroImage = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    setHeroUploadError('');
+    if (!file) return;
+    if (!isAllowedImage(file)) {
+      setHeroUploadError('admin.onlyImages');
+      return;
+    }
+    if (file.size > MAX_HERO_IMAGE_SIZE) {
+      setHeroUploadError('admin.heroImageTooLarge');
+      return;
+    }
+    setHeroUploading(true);
+    try {
+      const image = await uploadStoreImage(file);
+      await updateHeroImage(image);
+    } catch {
+      setHeroUploadError('admin.heroImageSaveFailed');
+    } finally {
+      setHeroUploading(false);
+    }
+  };
+  const resetHeroImage = async () => {
+    setHeroUploadError('');
+    setHeroUploading(true);
+    try {
+      await updateHeroImage('');
+    } catch {
+      setHeroUploadError('admin.heroImageSaveFailed');
+    } finally {
+      setHeroUploading(false);
+    }
+  };
 
   return (
     <div className="admin-page">
@@ -83,6 +123,44 @@ export default function AdminDashboard() {
           </div>
         ))}
       </div>
+
+      <section className="admin-card admin-card-wide admin-hero-settings">
+        <div className="admin-section-head">
+          <div>
+            <h2>{t('admin.homeHeroImage')}</h2>
+            <p className="admin-subtitle">{t('admin.homeHeroImageHint')}</p>
+          </div>
+          <div className="admin-hero-actions">
+            <button
+              type="button"
+              className="btn btn-lg admin-btn-accent"
+              onClick={() => heroInputRef.current?.click()}
+              disabled={heroUploading}
+            >
+              <span>{heroUploading ? t('admin.uploading') : t('admin.changeHeroImage')}</span>
+            </button>
+            {heroImage && (
+              <button type="button" className="btn btn-outline" onClick={resetHeroImage} disabled={heroUploading}>
+                {t('admin.restoreDefaultHero')}
+              </button>
+            )}
+            <input
+              ref={heroInputRef}
+              className="admin-category-file-input"
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+              onChange={handleHeroImage}
+              aria-label={t('admin.changeHeroImage')}
+            />
+          </div>
+        </div>
+        {heroUploadError && <p className="admin-field-error" role="alert">{t(heroUploadError)}</p>}
+        <img
+          className="admin-hero-preview"
+          src={heroImage || IMAGES.hero}
+          alt={t('admin.homeHeroImage')}
+        />
+      </section>
 
       <div className="admin-grid">
         {/* Category breakdown */}

@@ -22,13 +22,14 @@ const FEATURE_ICONS = [
 export default function Home() {
   useSEO(null);
   const { t, lang } = useLang();
-  const { products, categories, isSeasonHidden } = useAdmin();
+  const { products, categories, isSeasonHidden, heroImage } = useAdmin();
   const visible = products.filter((p) => p.active !== false && !isSeasonHidden(p.season));
   // Each home section shows the 6 newest products the admin added (by
   // createdAt, newest first); the "View all" arrow link leads to the rest.
   const newArrivals = sortByNewest(visible).slice(0, 6);
   const onSale = sortByNewest(visible.filter((p) => p.salePrice != null));
   const maxOff = onSale.length ? Math.max(...onSale.map(discountPercent)) : 0;
+  const heroSrc = heroImage || IMAGES.hero;
   const reviews = t('reviews');
   const features = FEATURE_ICONS.map(({ icon, titleKey, textKey }) => ({
     icon,
@@ -64,12 +65,13 @@ export default function Home() {
         </div>
         <div className="hero-media">
           {/* LQIP: tiny blurred placeholder painted instantly; the full image fades in once loaded */}
-          <img className="hero-media-lqip" src={HERO_LQIP} alt="" aria-hidden="true" width="24" height="36" />
+          {!heroImage && <img className="hero-media-lqip" src={HERO_LQIP} alt="" aria-hidden="true" width="24" height="36" />}
           <picture className="hero-media-picture">
-            <source media="(min-width: 601px)" srcSet={IMAGES.heroDesktop} />
+            <source media="(min-width: 601px)" srcSet={heroSrc} />
             <img
               className="hero-media-main"
-              src={IMAGES.hero}
+              data-custom-hero={heroImage ? 'true' : undefined}
+              src={heroSrc}
               alt={t('hero.alt')}
               width="768"
               height="1152"
