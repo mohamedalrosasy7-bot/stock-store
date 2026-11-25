@@ -108,7 +108,7 @@ const COLOR = {
 };
 const cols = (...names) => names.map((name) => ({ name, hex: COLOR[name] }));
 
-const CLOTH_SIZES = ['S', 'M', 'L', 'XL', 'XXL'];
+const CLOTH_SIZES = ['S', 'M', 'L', 'XL'];
 const SHOE_SIZES = ['40', '41', '42', '43', '44', '45'];
 
 const DETAILS = {
