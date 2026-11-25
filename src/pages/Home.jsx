@@ -22,7 +22,7 @@ const FEATURE_ICONS = [
 export default function Home() {
   useSEO(null);
   const { t, lang } = useLang();
-  const { products, categories, isSeasonHidden, heroImage } = useAdmin();
+  const { products, categories, isSeasonHidden, heroImage, offerImage, offerContent } = useAdmin();
   const visible = products.filter((p) => p.active !== false && !isSeasonHidden(p.season));
   // Each home section shows the 6 newest products the admin added (by
   // createdAt, newest first); the "View all" arrow link leads to the rest.
@@ -30,6 +30,10 @@ export default function Home() {
   const onSale = sortByNewest(visible.filter((p) => p.salePrice != null));
   const maxOff = onSale.length ? Math.max(...onSale.map(discountPercent)) : 0;
   const heroSrc = heroImage || IMAGES.hero;
+  const offerCopy = offerContent?.[lang] || {};
+  const offerTitle = offerCopy.title == null
+    ? t('home.offerTitle', { percent: maxOff })
+    : offerCopy.title.replace(/\{percent\}/g, String(maxOff));
   const reviews = t('reviews');
   const features = FEATURE_ICONS.map(({ icon, titleKey, textKey }) => ({
     icon,
@@ -130,14 +134,20 @@ export default function Home() {
       <ProductSection eyebrow={t('home.justLanded')} title={t('home.newArrivals')} products={newArrivals} moreTo="/shop" moreLabel={t('wishlist.discover')} />
 
       <Reveal as="section" className="offer" >
-        <div className="offer-bg" style={{ '--img': `url(${IMAGES.banner})` }}>
+        <div className="offer-bg" style={{ '--img': `url(${JSON.stringify(offerImage || IMAGES.banner)})` }}>
           <div className="container offer-inner">
-            <p className="eyebrow light">{t('home.specialOffer')}</p>
-            <h2>{t('home.offerTitle', { percent: maxOff })}</h2>
-            <p>{t('home.offerText')}</p>
-            <Link to="/shop?sale=1" className="btn btn-light btn-lg">
-              {t('home.shopSale')} <ArrowIcon size={18} />
-            </Link>
+            {(offerCopy.eyebrow ?? t('home.specialOffer')) && (
+              <p className="eyebrow light">{offerCopy.eyebrow ?? t('home.specialOffer')}</p>
+            )}
+            {offerTitle && <h2>{offerTitle}</h2>}
+            {(offerCopy.description ?? t('home.offerText')) && (
+              <p>{offerCopy.description ?? t('home.offerText')}</p>
+            )}
+            {(offerCopy.button ?? t('home.shopSale')) && (
+              <Link to="/shop?sale=1" className="btn btn-light btn-lg">
+                {offerCopy.button ?? t('home.shopSale')} <ArrowIcon size={18} />
+              </Link>
+            )}
           </div>
         </div>
       </Reveal>

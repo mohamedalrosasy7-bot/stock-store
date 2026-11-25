@@ -6,8 +6,190 @@ import { money } from '../config';
 import { coverImage, getCategoryName, IMAGES, sortByNewest } from '../data/products';
 import { EditIcon, PackageIcon, TagIcon, UsersIcon, ClockIcon } from '../components/Icons';
 import { isAllowedImage, uploadStoreImage } from '../lib/images';
+import { resources } from '../i18n';
 
-const MAX_HERO_IMAGE_SIZE = 8 * 1024 * 1024;
+const MAX_STORE_IMAGE_SIZE = 8 * 1024 * 1024;
+const OFFER_COPY_FIELDS = [
+  { key: 'eyebrow', label: 'admin.offerEyebrow', maxLength: 100 },
+  { key: 'title', label: 'admin.offerHeading', maxLength: 240 },
+  { key: 'description', label: 'admin.offerDescription', maxLength: 500 },
+  { key: 'button', label: 'admin.offerButton', maxLength: 100 },
+];
+const DEFAULT_OFFER_COPY = {
+  ar: {
+    eyebrow: resources.ar.home.specialOffer,
+    title: resources.ar.home.offerTitle,
+    description: resources.ar.home.offerText,
+    button: resources.ar.home.shopSale,
+  },
+  en: {
+    eyebrow: resources.en.home.specialOffer,
+    title: resources.en.home.offerTitle,
+    description: resources.en.home.offerText,
+    button: resources.en.home.shopSale,
+  },
+};
+
+function AdminImageSetting({ image, defaultImage, title, hint, changeLabel, restoreLabel, onSave, t }) {
+  const inputRef = useRef(null);
+  const [uploadError, setUploadError] = useState('');
+  const [uploading, setUploading] = useState(false);
+
+  const handleFile = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    setUploadError('');
+    if (!file) return;
+    if (!isAllowedImage(file)) {
+      setUploadError('admin.onlyImages');
+      return;
+    }
+    if (file.size > MAX_STORE_IMAGE_SIZE) {
+      setUploadError('admin.storeImageTooLarge');
+      return;
+    }
+    setUploading(true);
+    try {
+      await onSave(await uploadStoreImage(file));
+    } catch {
+      setUploadError('admin.storeImageSaveFailed');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const restoreDefault = async () => {
+    setUploadError('');
+    setUploading(true);
+    try {
+      await onSave('');
+    } catch {
+      setUploadError('admin.storeImageSaveFailed');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <section className="admin-card admin-card-wide admin-hero-settings">
+      <div className="admin-section-head">
+        <div>
+          <h2>{title}</h2>
+          <p className="admin-subtitle">{hint}</p>
+        </div>
+        <div className="admin-hero-actions">
+          <button
+            type="button"
+            className="btn btn-lg admin-btn-accent"
+            onClick={() => inputRef.current?.click()}
+            disabled={uploading}
+          >
+            <span>{uploading ? t('admin.uploading') : changeLabel}</span>
+          </button>
+          {image && (
+            <button type="button" className="btn btn-outline" onClick={restoreDefault} disabled={uploading}>
+              {restoreLabel}
+            </button>
+          )}
+          <input
+            ref={inputRef}
+            className="admin-category-file-input"
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+            onChange={handleFile}
+            aria-label={changeLabel}
+          />
+        </div>
+      </div>
+      {uploadError && <p className="admin-field-error" role="alert">{t(uploadError)}</p>}
+      <img className="admin-hero-preview" src={image || defaultImage} alt={title} />
+    </section>
+  );
+}
+
+function AdminOfferCopy({ offerContent, onSave, t }) {
+  const [draft, setDraft] = useState({});
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
+  const valueFor = (locale, key) =>
+    draft[locale]?.[key] ?? offerContent?.[locale]?.[key] ?? DEFAULT_OFFER_COPY[locale][key];
+
+  const save = async (event) => {
+    event.preventDefault();
+    setSaving(true);
+    setSaveError('');
+    const content = Object.fromEntries(['ar', 'en'].map((locale) => [
+      locale,
+      Object.fromEntries(OFFER_COPY_FIELDS.map(({ key }) => [key, valueFor(locale, key)])),
+    ]));
+    try {
+      await onSave(content);
+      setDraft(content);
+    } catch {
+      setSaveError('admin.offerCopySaveFailed');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <section className="admin-card admin-card-wide">
+      <div className="admin-section-head">
+        <div>
+          <h2>{t('admin.offerCopyTitle')}</h2>
+          <p className="admin-subtitle">{t('admin.offerCopyHint')}</p>
+        </div>
+      </div>
+      <form onSubmit={save}>
+        <div className="admin-offer-copy-grid">
+          {['ar', 'en'].map((locale) => (
+            <fieldset key={locale} className="admin-offer-copy-locale" dir={locale === 'ar' ? 'rtl' : 'ltr'}>
+              <legend>{t(locale === 'ar' ? 'admin.offerArabic' : 'admin.offerEnglish')}</legend>
+              <div className="admin-offer-copy-fields">
+                {OFFER_COPY_FIELDS.map(({ key, label, maxLength }) => (
+                  <label key={key} className="admin-field">
+                    <span>{t(label)}</span>
+                    {key === 'description' ? (
+                      <textarea
+                        rows={3}
+                        maxLength={maxLength}
+                        value={valueFor(locale, key)}
+                        onChange={(event) => setDraft((current) => ({
+                          ...current,
+                          [locale]: { ...(current[locale] || {}), [key]: event.target.value },
+                        }))}
+                      />
+                    ) : (
+                      <input
+                        type="text"
+                        maxLength={maxLength}
+                        value={valueFor(locale, key)}
+                        onChange={(event) => setDraft((current) => ({
+                          ...current,
+                          [locale]: { ...(current[locale] || {}), [key]: event.target.value },
+                        }))}
+                      />
+                    )}
+                    {key === 'title' && <small className="muted">{t('admin.offerPercentHint')}</small>}
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+          ))}
+        </div>
+        {saveError && <p className="admin-field-error" role="alert">{t(saveError)}</p>}
+        <div className="admin-form-actions">
+          <button type="button" className="btn btn-outline" onClick={() => setDraft(DEFAULT_OFFER_COPY)}>
+            {t('admin.restoreDefaultOfferText')}
+          </button>
+          <button type="submit" className="btn btn-lg admin-btn-accent" disabled={saving}>
+            {saving ? t('admin.saving') : t('admin.saveChanges')}
+          </button>
+        </div>
+      </form>
+    </section>
+  );
+}
 
 const STAT_CARDS = [
   { labelKey: 'admin.statTotalProducts', icon: <PackageIcon size={20} />, color: 'var(--accent)' },
@@ -18,10 +200,11 @@ const STAT_CARDS = [
 
 export default function AdminDashboard() {
   const { t, lang } = useLang();
-  const { products, categories, heroImage, updateHeroImage, status, statusMsg, clearStatus } = useAdmin();
-  const heroInputRef = useRef(null);
-  const [heroUploadError, setHeroUploadError] = useState('');
-  const [heroUploading, setHeroUploading] = useState(false);
+  const {
+    products, categories, heroImage, updateHeroImage, offerImage, updateOfferImage,
+    offerContent, updateOfferContent,
+    status, statusMsg, clearStatus,
+  } = useAdmin();
 
   // Same snappy auto-dismiss as the other admin pages (1.5s).
   useEffect(() => {
@@ -55,41 +238,6 @@ export default function AdminDashboard() {
     return cat ? getCategoryName(cat, lang) : id;
   };
   const firstImage = coverImage;
-  const handleHeroImage = async (event) => {
-    const file = event.target.files?.[0];
-    event.target.value = '';
-    setHeroUploadError('');
-    if (!file) return;
-    if (!isAllowedImage(file)) {
-      setHeroUploadError('admin.onlyImages');
-      return;
-    }
-    if (file.size > MAX_HERO_IMAGE_SIZE) {
-      setHeroUploadError('admin.heroImageTooLarge');
-      return;
-    }
-    setHeroUploading(true);
-    try {
-      const image = await uploadStoreImage(file);
-      await updateHeroImage(image);
-    } catch {
-      setHeroUploadError('admin.heroImageSaveFailed');
-    } finally {
-      setHeroUploading(false);
-    }
-  };
-  const resetHeroImage = async () => {
-    setHeroUploadError('');
-    setHeroUploading(true);
-    try {
-      await updateHeroImage('');
-    } catch {
-      setHeroUploadError('admin.heroImageSaveFailed');
-    } finally {
-      setHeroUploading(false);
-    }
-  };
-
   return (
     <div className="admin-page">
       {status && statusMsg && (
@@ -124,43 +272,27 @@ export default function AdminDashboard() {
         ))}
       </div>
 
-      <section className="admin-card admin-card-wide admin-hero-settings">
-        <div className="admin-section-head">
-          <div>
-            <h2>{t('admin.homeHeroImage')}</h2>
-            <p className="admin-subtitle">{t('admin.homeHeroImageHint')}</p>
-          </div>
-          <div className="admin-hero-actions">
-            <button
-              type="button"
-              className="btn btn-lg admin-btn-accent"
-              onClick={() => heroInputRef.current?.click()}
-              disabled={heroUploading}
-            >
-              <span>{heroUploading ? t('admin.uploading') : t('admin.changeHeroImage')}</span>
-            </button>
-            {heroImage && (
-              <button type="button" className="btn btn-outline" onClick={resetHeroImage} disabled={heroUploading}>
-                {t('admin.restoreDefaultHero')}
-              </button>
-            )}
-            <input
-              ref={heroInputRef}
-              className="admin-category-file-input"
-              type="file"
-              accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
-              onChange={handleHeroImage}
-              aria-label={t('admin.changeHeroImage')}
-            />
-          </div>
-        </div>
-        {heroUploadError && <p className="admin-field-error" role="alert">{t(heroUploadError)}</p>}
-        <img
-          className="admin-hero-preview"
-          src={heroImage || IMAGES.hero}
-          alt={t('admin.homeHeroImage')}
-        />
-      </section>
+      <AdminImageSetting
+        image={heroImage}
+        defaultImage={IMAGES.hero}
+        title={t('admin.homeHeroImage')}
+        hint={t('admin.homeHeroImageHint')}
+        changeLabel={t('admin.changeHeroImage')}
+        restoreLabel={t('admin.restoreDefaultHero')}
+        onSave={updateHeroImage}
+        t={t}
+      />
+      <AdminImageSetting
+        image={offerImage}
+        defaultImage={IMAGES.banner}
+        title={t('admin.homeOfferImage')}
+        hint={t('admin.homeOfferImageHint')}
+        changeLabel={t('admin.changeOfferImage')}
+        restoreLabel={t('admin.restoreDefaultOffer')}
+        onSave={updateOfferImage}
+        t={t}
+      />
+      <AdminOfferCopy offerContent={offerContent} onSave={updateOfferContent} t={t} />
 
       <div className="admin-grid">
         {/* Category breakdown */}

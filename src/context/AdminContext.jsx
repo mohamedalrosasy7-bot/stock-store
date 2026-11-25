@@ -66,6 +66,8 @@ export function AdminProvider({ children }) {
   const [products, setProducts] = useState(initialProducts);
   const [shopAds, setShopAds] = useState({ enabled: true, banners: DEFAULT_AD_BANNERS });
   const [heroImage, setHeroImage] = useState('');
+  const [offerImage, setOfferImage] = useState('');
+  const [offerContent, setOfferContent] = useState({});
   const [status, setStatus] = useState(null); // 'loading' | 'success' | 'error'
   const [statusMsg, setStatusMsg] = useState('');
   const [hiddenSeasons, setHiddenSeasons] = useState({});
@@ -94,6 +96,8 @@ export function AdminProvider({ children }) {
     setShopAds({ enabled: snapshot.ads.enabled !== false, banners: snapshot.ads.banners });
     setHiddenSeasons(snapshot.settings?.hiddenSeasons || {});
     setHeroImage(snapshot.settings?.heroImage || '');
+    setOfferImage(snapshot.settings?.offerImage || '');
+    setOfferContent(snapshot.settings?.offerContent || {});
     if (verified) setCatalogLoaded(true);
   }, []);
 
@@ -112,6 +116,8 @@ export function AdminProvider({ children }) {
     }
     setHiddenSeasons(settingsData?.settings?.hiddenSeasons || {});
     setHeroImage(settingsData?.settings?.heroImage || '');
+    setOfferImage(settingsData?.settings?.offerImage || '');
+    setOfferContent(settingsData?.settings?.offerContent || {});
   }, []);
 
   const refreshPublicStoreData = useCallback(async () => {
@@ -477,6 +483,30 @@ export function AdminProvider({ children }) {
     }
   }, [apiError]);
 
+  const updateOfferImage = useCallback(async (image) => {
+    try {
+      await api('/api/settings', { method: 'PUT', body: { offerImage: image } });
+      setOfferImage(image);
+      setStatus('success');
+      setStatusMsg('admin.toastOfferImageSaved');
+    } catch (error) {
+      apiError(error);
+      throw error;
+    }
+  }, [apiError]);
+
+  const updateOfferContent = useCallback(async (content) => {
+    try {
+      await api('/api/settings', { method: 'PUT', body: { offerContent: content } });
+      setOfferContent(content);
+      setStatus('success');
+      setStatusMsg('admin.toastOfferContentSaved');
+    } catch (error) {
+      apiError(error);
+      throw error;
+    }
+  }, [apiError]);
+
   const isSeasonHidden = useCallback(
     (season) => !!hiddenSeasons[normalizeSeason(season)],
     [hiddenSeasons]
@@ -503,6 +533,10 @@ export function AdminProvider({ children }) {
     shopAds,
     heroImage,
     updateHeroImage,
+    offerImage,
+    updateOfferImage,
+    offerContent,
+    updateOfferContent,
     addProduct,
     updateProduct,
     deleteProduct,
