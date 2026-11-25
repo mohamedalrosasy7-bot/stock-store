@@ -30,6 +30,7 @@ function Details({ product, categories }) {
   const { has, toggle } = useWishlist();
   const toast = useToast();
   const [img, setImg] = useState(0);
+  const touchStartX = useRef(null);
   // Arriving from a card's "Add to cart" button (#pick): scroll straight to
   // the color/size chooser and flash it so the shopper knows to pick variants.
   useEffect(() => {
@@ -70,6 +71,33 @@ function Details({ product, categories }) {
   const activeImages = [...new Set([...images, ...allColorImages])];
 
   useSEO(product.name, product.description);
+
+  const selectImage = (index) => {
+    setImg(index);
+    const matchingColor = colors.find((color) =>
+      Array.isArray(color.images) && color.images.includes(activeImages[index])
+    );
+    if (matchingColor && selectedVariant) {
+      setVariants((current) => current.map((variant) =>
+        variant.id === activeVariantId
+          ? { ...variant, color: matchingColor.name }
+          : variant
+      ));
+    }
+  };
+  const stepImage = (step) => {
+    if (!activeImages.length) return;
+    selectImage((img + step + activeImages.length) % activeImages.length);
+  };
+  const handleGalleryTouchStart = (event) => {
+    touchStartX.current = event.changedTouches[0]?.clientX ?? null;
+  };
+  const handleGalleryTouchEnd = (event) => {
+    if (touchStartX.current === null) return;
+    const distance = event.changedTouches[0].clientX - touchStartX.current;
+    touchStartX.current = null;
+    if (Math.abs(distance) >= 40) stepImage(distance < 0 ? 1 : -1);
+  };
 
   const pct = discountPercent(product);
   const details = getProductDetails(product);
@@ -168,19 +196,7 @@ function Details({ product, categories }) {
               <button
                 key={src}
                 className={`thumb ${i === img ? 'active' : ''} ${imageColor?.name === selectedVariant?.color ? 'matches-selected-color' : ''}`}
-                onClick={() => {
-                  setImg(i);
-                  const matchingColor = colors.find((color) =>
-                    Array.isArray(color.images) && color.images.includes(src)
-                  );
-                  if (matchingColor && selectedVariant) {
-                    setVariants((current) => current.map((variant) =>
-                      variant.id === activeVariantId
-                        ? { ...variant, color: matchingColor.name }
-                        : variant
-                    ));
-                  }
-                }}
+                onClick={() => selectImage(i)}
                 aria-label={t('product.viewImage', { index: i + 1 })}
               >
                 <ProductImage src={src} alt={`${product.name} view ${i + 1}`} />
@@ -189,11 +205,21 @@ function Details({ product, categories }) {
               })()
             ))}
           </div>
-          <div className="gallery-main">
+          <div
+            className="gallery-main"
+            onTouchStart={handleGalleryTouchStart}
+            onTouchEnd={handleGalleryTouchEnd}
+            onTouchCancel={() => { touchStartX.current = null; }}
+          >
             {activeImages.length ? (
               <ProductImage src={activeImages[img % activeImages.length]} alt={`${product.name} - ${selectedVariant?.color || ''}`} loading="eager" />
             ) : (
               <ProductImage src="" alt={product.name} loading="eager" />
+            )}
+            {activeImages.length > 1 && (
+              <span className="gallery-count" aria-live="polite" dir="ltr">
+                {img + 1} / {activeImages.length}
+              </span>
             )}
             <div className="badges">
               {pct > 0 && <span className="badge badge-sale">-{pct}%</span>}

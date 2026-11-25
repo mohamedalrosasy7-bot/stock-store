@@ -429,7 +429,7 @@ p { margin: 0 0 1rem; }
 .pdp-grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 3.5rem; align-items: start; }
 .gallery { display: grid; grid-template-columns: 84px 1fr; gap: 0.9rem; position: sticky; top: 130px; }
 .thumbs { display: flex; flex-direction: column; gap: 0.7rem; }
-.thumb { aspect-ratio: 4 / 5; border: 1px solid transparent; opacity: 0.6; transition: 0.2s; overflow: hidden; }
+.thumb { flex: 0 0 auto; aspect-ratio: 4 / 5; border: 1px solid transparent; opacity: 0.6; transition: 0.2s; overflow: hidden; }
 .thumb .pimg { height: 100%; }
 .thumb.active, .thumb:hover { opacity: 1; border-color: var(--text); }
 .thumb.matches-selected-color {
@@ -437,8 +437,10 @@ p { margin: 0 0 1rem; }
   box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--accent);
   opacity: 1;
 }
-.gallery-main { position: relative; aspect-ratio: 4 / 5; overflow: hidden; }
+.gallery-main { position: relative; aspect-ratio: 4 / 5; overflow: hidden; touch-action: pan-y; }
 .gallery-main .pimg { width: 100%; height: 100%; }
+.gallery-main .pimg img { object-fit: contain; }
+.gallery-count { display: none; }
 .pdp-info h1 { font-size: clamp(2rem, 4vw, 3rem); margin-bottom: 0.6rem; }
 .pdp-desc { color: var(--muted); max-width: 34rem; }
 .variant-list { display: grid; gap: 0.7rem; margin-top: 1.2rem; }
@@ -646,15 +648,37 @@ p { margin: 0 0 1rem; }
   .reviews { grid-template-columns: 1fr; }
   .section { padding-top: 3rem; }
   .section-head { align-items: flex-start; flex-direction: column; }
-  .gallery { grid-template-columns: 1fr; }
+  .gallery { grid-template-columns: minmax(0, 1fr); }
   .thumbs { flex-direction: row; order: 2; }
   .gallery-main {
-    width: 88%;
-    max-width: 360px;
+    width: 100%;
+    max-width: 480px;
     margin-inline: auto;
-    aspect-ratio: 1 / 1;
+    aspect-ratio: 4 / 5;
   }
-  .thumb { width: 56px; }
+  .thumbs {
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    padding: 4px;
+  }
+  .thumbs::-webkit-scrollbar { display: none; }
+  .thumb { flex: 0 0 56px; scroll-snap-align: start; }
+  .gallery-count {
+    display: block;
+    position: absolute;
+    right: 0.65rem;
+    bottom: 0.65rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--text) 65%, transparent);
+    color: var(--surface);
+    font-size: 0.7rem;
+    line-height: 1.2;
+  }
   .variant-row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: .55rem .65rem;
