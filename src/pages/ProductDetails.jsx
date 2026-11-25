@@ -232,6 +232,9 @@ function Details({ product, categories }) {
           <p className="eyebrow">{catLabel}</p>
           <h1>{product.name}</h1>
           <Price product={product} large />
+          {product.description?.trim() && (
+            <p className="pdp-desc">{product.description}</p>
+          )}
 
           <div className="variant-list" id="pick">
             {variants.map((variant, index) => {
