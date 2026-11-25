@@ -8,13 +8,8 @@ import { deleteImage } from '../lib/api';
 import { money } from '../config';
 import { CloseIcon, ArrowIcon } from '../components/Icons';
 
-const DEFAULT_SIZES = {
-  shoes: ['40', '41', '42', '43', '44', '45'],
-  pants: ['S', 'M', 'L', 'XL', 'XXL'],
-  hoodies: ['S', 'M', 'L', 'XL', 'XXL'],
-  jackets: ['S', 'M', 'L', 'XL', 'XXL'],
-  pullover: ['S', 'M', 'L', 'XL', 'XXL'],
-};
+const LETTER_SIZE_OPTIONS = ['M', 'L', 'XL', '2XL', '3XL'];
+const NUMBER_SIZE_OPTIONS = ['30', '32', '34', '36', '38', '40'];
 
 export default function AdminProductForm() {
   const { t, lang } = useLang();
@@ -31,7 +26,7 @@ export default function AdminProductForm() {
   const [form, setForm] = useState({
     name: '', description: '', category: defaultCategory, price: '', discount: '',
     colors: [{ name: 'Black', hex: '#141414', images: [] }],
-    sizes: DEFAULT_SIZES[defaultCategory] || DEFAULT_SIZES.pants,
+    sizes: [],
     images: [],
     active: true,
     soldOut: false,
@@ -187,11 +182,16 @@ export default function AdminProductForm() {
     }));
   };
   const toggleSize = (s) => setForm((p) => {
-    const removing = p.sizes.includes(s);
+    const existingSize = p.sizes.find((size) => size.toLowerCase() === s.toLowerCase());
+    const removing = existingSize !== undefined;
     return {
       ...p,
-      sizes: removing ? p.sizes.filter((x) => x !== s) : [...p.sizes, s],
-      soldOutSizes: removing ? p.soldOutSizes.filter((x) => x !== s) : p.soldOutSizes,
+      sizes: removing
+        ? p.sizes.filter((size) => size.toLowerCase() !== s.toLowerCase())
+        : [...p.sizes, s],
+      soldOutSizes: removing
+        ? p.soldOutSizes.filter((size) => size !== existingSize)
+        : p.soldOutSizes,
     };
   });
   const toggleSoldOutColor = (name) => setForm((p) => ({
@@ -278,10 +278,7 @@ export default function AdminProductForm() {
 
           <div className="admin-field">
             <label>{t('admin.categoryLabel')}</label>
-            <select value={form.category} onChange={(e) => {
-              const cat = e.target.value;
-              setForm((p) => ({ ...p, category: cat, sizes: DEFAULT_SIZES[cat] || DEFAULT_SIZES.pants }));
-            }}>
+            <select value={form.category} onChange={(e) => set('category', e.target.value)}>
               {categories.map((c) => <option key={c.id} value={c.id}>{getCategoryName(c, lang)}</option>)}
             </select>
           </div>
@@ -382,10 +379,37 @@ export default function AdminProductForm() {
 
           <div className="admin-field full">
             <label>{t('admin.sizes')}</label>
+            <span className="muted small">{t('admin.chooseSizes')}</span>
+            <div className="admin-size-options">
+              {[
+                [t('admin.letterSizes'), LETTER_SIZE_OPTIONS],
+                [t('admin.numberSizes'), NUMBER_SIZE_OPTIONS],
+              ].map(([label, options]) => (
+                <div className="admin-size-option-group" key={label}>
+                  <span className="admin-size-option-label">{label}</span>
+                  <div className="admin-size-list" role="group" aria-label={label}>
+                    {options.map((size) => {
+                      const selected = form.sizes.some((current) => current.toLowerCase() === size.toLowerCase());
+                      return (
+                        <button
+                          key={size}
+                          type="button"
+                          className={`size-chip ${selected ? 'active' : ''}`}
+                          aria-pressed={selected}
+                          onClick={() => toggleSize(size)}
+                        >
+                          {size}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
             {errors.sizes && <span className="admin-field-error">{t(errors.sizes)}</span>}
             <div className="admin-sizes-box">
               <div className="admin-sizes-box-head">
-                <strong>{t('admin.availableSizes')}</strong>
+                <strong>{t('admin.selectedSizes')}</strong>
                 <span className="muted small">{t('admin.soldOutSizesHint')}</span>
               </div>
               <div className="admin-stock-size-list">
