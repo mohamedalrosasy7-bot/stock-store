@@ -80,6 +80,7 @@ function Details({ product, categories }) {
   const updateVariantColor = (variantId, colorName) => {
     const currentVariant = variants.find((variant) => variant.id === variantId);
     const availability = getColorAvailability(product, colorName);
+    if (availability.soldOut) return;
     const size = availability.availableSizes.includes(currentVariant?.size)
       ? currentVariant.size
       : availability.availableSizes.length === 1
@@ -215,6 +216,7 @@ function Details({ product, categories }) {
                 const imageColorSoldOut = imageColor
                   ? getColorAvailability(product, imageColor.name).soldOut
                   : false;
+                const thumbSoldOut = soldOutWhole || imageColorSoldOut;
                 return (
               <button
                 key={src}
@@ -223,7 +225,7 @@ function Details({ product, categories }) {
                 aria-label={t('product.viewImage', { index: i + 1 })}
               >
                 <ProductImage src={src} alt={`${product.name} view ${i + 1}`} />
-                {imageColorSoldOut && <span className="badge badge-sold-out">{t('admin.soldOut')}</span>}
+                {thumbSoldOut && <span className="badge badge-sold-out">{t('admin.soldOut')}</span>}
               </button>
                 );
               })()
@@ -301,7 +303,7 @@ function Details({ product, categories }) {
                           aria-checked={variant.color === c.name}
                           aria-label={c.name}
                           title={c.name}
-                          className={`swatch ${variant.color === c.name ? 'active' : ''} ${getColorAvailability(product, c.name).soldOut ? 'sold-out' : ''}`}
+                          className={`swatch ${!getColorAvailability(product, c.name).soldOut ? 'available' : ''} ${variant.color === c.name ? 'active' : ''} ${getColorAvailability(product, c.name).soldOut ? 'sold-out' : ''}`}
                           style={{ '--c': c.hex }}
                           disabled={getColorAvailability(product, c.name).soldOut}
                           onClick={() => updateVariant(variant.id, 'color', c.name)}
@@ -320,7 +322,7 @@ function Details({ product, categories }) {
                           type="button"
                           role="radio"
                           aria-checked={variant.size === sizeOption}
-                          className={`size ${variant.size === sizeOption ? 'active' : ''} ${availability.soldOutSizes.includes(sizeOption) ? 'sold-out' : ''}`}
+                          className={`size ${!availability.soldOut && !availability.soldOutSizes.includes(sizeOption) ? 'available' : ''} ${variant.size === sizeOption ? 'active' : ''} ${availability.soldOut || availability.soldOutSizes.includes(sizeOption) ? 'sold-out' : ''}`}
                           disabled={availability.soldOut || availability.soldOutSizes.includes(sizeOption)}
                           onClick={() => updateVariant(variant.id, 'size', sizeOption)}
                         >

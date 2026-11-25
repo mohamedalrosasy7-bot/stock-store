@@ -222,6 +222,7 @@ p { margin: 0 0 1rem; }
 .swatches { display: flex; gap: 0.45rem; }
 .swatch { width: 18px; height: 18px; border-radius: 50%; background: var(--c); border: 1px solid var(--line); outline-offset: 2px; transition: transform 0.2s; }
 .swatch:hover { transform: scale(1.15); }
+.swatch.available { box-shadow: 0 0 0 2px var(--surface), 0 0 0 3px color-mix(in srgb, var(--text) 28%, transparent); }
 .swatch.active { outline: 1.5px solid var(--text); }
 .swatch.sold-out { opacity: .35; filter: grayscale(.8); text-decoration: line-through; }
 .swatch.sold-out::after { position: absolute; width: 150%; height: 2px; border-radius: 999px; background: var(--danger); content: ''; transform: rotate(-45deg); }
@@ -231,6 +232,7 @@ p { margin: 0 0 1rem; }
 .sizes { display: flex; flex-wrap: wrap; gap: 0.3rem; }
 .size { min-width: 34px; padding: 0.2rem 0.45rem; border: 1px solid var(--line); font-size: 0.72rem; transition: 0.2s; }
 .size:hover { border-color: var(--text); }
+.size.available { border-color: color-mix(in srgb, var(--text) 35%, var(--line)); background: var(--surface); }
 .size.active { background: var(--inv-bg); color: var(--inv-text); border-color: var(--inv-bg); }
 .size.sold-out { position: relative; color: var(--muted); opacity: .55; text-decoration: line-through; background: var(--surface-2); }
 .size.sold-out::after { position: absolute; top: 50%; left: 8%; width: 84%; height: 1px; background: var(--danger); content: ''; transform: rotate(-18deg); }
