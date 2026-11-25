@@ -235,15 +235,19 @@ export default function AdminProductForm() {
       ? p.soldOutColors.filter((value) => value !== name)
       : [...p.soldOutColors, name],
   }));
-  const toggleSoldOutSize = (colorIndex, size) => setForm((p) => ({
-    ...p,
-    colors: p.colors.map((color, index) => index !== colorIndex ? color : ({
-      ...color,
-      soldOutSizes: (color.soldOutSizes || []).includes(size)
-        ? color.soldOutSizes.filter((value) => value !== size)
-        : [...(color.soldOutSizes || []), size],
-    })),
-  }));
+  const toggleSoldOutSize = (colorIndex, size) => setForm((p) => {
+    const colorName = p.colors[colorIndex]?.name;
+    return {
+      ...p,
+      soldOutColors: p.soldOutColors.filter((name) => name !== colorName),
+      colors: p.colors.map((color, index) => index !== colorIndex ? color : ({
+        ...color,
+        soldOutSizes: (color.soldOutSizes || []).includes(size)
+          ? color.soldOutSizes.filter((value) => value !== size)
+          : [...(color.soldOutSizes || []), size],
+      })),
+    };
+  });
   const addCustomSize = (colorIndex) => {
     const value = (customSizes[colorIndex] || '').trim();
     if (!value) return;
