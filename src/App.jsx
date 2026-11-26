@@ -1,5 +1,5 @@
-﻿import { lazy, Suspense, useEffect, useState } from 'react';
-import { Outlet, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { Outlet, Route, Routes, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import WhatsAppButton from './components/WhatsAppButton';
@@ -38,8 +38,40 @@ function AdminRoute({ children }) {
 }
 
 function ScrollToTop() {
-  const { pathname } = useLocation();
-  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  const location = useLocation();
+  const navigationType = useNavigationType();
+  const scrollPositions = useRef(new Map());
+  const previousPathname = useRef(null);
+
+  useLayoutEffect(() => {
+    const previousRestoration = window.history.scrollRestoration;
+    window.history.scrollRestoration = 'manual';
+    return () => { window.history.scrollRestoration = previousRestoration; };
+  }, []);
+
+  useEffect(() => {
+    const key = location.key;
+    const savePosition = () => scrollPositions.current.set(key, window.scrollY);
+    savePosition();
+    window.addEventListener('scroll', savePosition, { passive: true });
+    return () => window.removeEventListener('scroll', savePosition);
+  }, [location.key]);
+
+  useLayoutEffect(() => {
+    const isInitialLocation = previousPathname.current === null;
+    const pathChanged = previousPathname.current !== location.pathname;
+
+    if (isInitialLocation || pathChanged) {
+      if (navigationType === 'POP') {
+        window.scrollTo(0, scrollPositions.current.get(location.key) || 0);
+      } else {
+        window.scrollTo(0, 0);
+      }
+    }
+
+    previousPathname.current = location.pathname;
+  }, [location.key, location.pathname, navigationType]);
+
   return null;
 }
 
