@@ -3179,23 +3179,23 @@ body:has(.admin-layout) { padding-bottom: 0; }
     flex: 1 1 100%;
     align-items: center;
     justify-content: space-between;
-    gap: 0;
+    gap: .3rem;
     min-width: 0;
     width: 100%;
     height: 42px;
     padding-inline: 0;
-    overflow-x: hidden;
+    overflow-x: auto;
     overscroll-behavior-inline: none;
+    -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     border-bottom: 1px solid var(--line);
   }
   .quick-category-filter::-webkit-scrollbar { display: none; }
   .quick-category-chip {
-    flex: 1 1 0;
-    min-width: 0;
+    flex: 0 0 auto;
     position: relative;
     height: 42px;
-    padding: 0 .18rem;
+    padding: 0 .35rem;
     border: 0;
     border-radius: 0;
     background: transparent;
@@ -3210,9 +3210,9 @@ body:has(.admin-layout) { padding-bottom: 0; }
   }
   .quick-category-chip.active::after {
     position: absolute;
-    right: .55rem;
+    right: .35rem;
     bottom: -1px;
-    left: .55rem;
+    left: .35rem;
     height: 2px;
     border-radius: 999px;
     background: var(--accent);
