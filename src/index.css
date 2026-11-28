@@ -2549,8 +2549,8 @@ body:has(.admin-layout) { padding-bottom: 0; }
 .admin-stock-size-row.is-sold-out { border-color: color-mix(in srgb, var(--danger) 48%, var(--line)); background: color-mix(in srgb, var(--danger) 8%, var(--bg)); }
 .admin-stock-size-row.is-sold-out strong { color: var(--danger); text-decoration: line-through; }
 .admin-size-options { display: grid; gap: .65rem; }
-.admin-size-list { display: flex; flex-wrap: wrap; gap: .5rem; }
-.size-chip { padding: .5rem .95rem; border: 1px solid var(--line); border-radius: 999px; font-size: .82rem; background: var(--bg); color: var(--muted); transition: .18s; font-weight: 500; }
+.admin-size-list { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: .5rem; }
+.admin-size-list .size-chip { min-width: 0; padding: .5rem .3rem; text-align: center; border: 1px solid var(--line); border-radius: 999px; font-size: .82rem; background: var(--bg); color: var(--muted); transition: .18s; font-weight: 500; }
 .size-chip:hover { border-color: var(--accent); color: var(--text); }
 .size-chip.active { background: var(--inv-bg); border-color: var(--inv-bg); color: var(--inv-text); font-weight: 600; }
 .admin-custom-size { display: flex; align-items: center; gap: .75rem; margin-top: .85rem; }
