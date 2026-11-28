@@ -250,7 +250,7 @@ function Details({ product, categories }) {
             onTouchCancel={() => { touchStartX.current = null; }}
           >
             {activeImages.length ? (
-              <ProductImage src={cloudinaryUrl(activeImages[img % activeImages.length], 'detail')} alt={`${product.name} - ${selectedVariant?.color || ''}`} loading="eager" />
+              <ProductImage src={cloudinaryUrl(activeImages[img % activeImages.length], 'detail')} alt={`${product.name} - ${selectedVariant?.color || ''}`} loading="eager" fetchPriority="high" />
             ) : (
               <ProductImage src="" alt={product.name} loading="eager" />
             )}

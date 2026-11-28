@@ -240,7 +240,7 @@ p { margin: 0 0 1rem; }
 /* image loading */
 .pimg { position: relative; background: var(--surface-2); overflow: hidden; }
 .pimg.loading { background: linear-gradient(100deg, var(--surface-2) 30%, var(--line) 50%, var(--surface-2) 70%) 0 0 / 200% 100%; animation: shimmer 1.3s infinite linear; }
-.pimg img { opacity: 0; transition: opacity 0.6s, transform 0.8s var(--ease); width: 100%; height: 100%; object-fit: cover; }
+.pimg img { opacity: 0; transition: opacity 0.2s, transform 0.8s var(--ease); width: 100%; height: 100%; object-fit: cover; }
 .pimg.loaded img { opacity: 1; }
 .pimg-fallback { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--serif); font-size: 3rem; color: var(--beige); background: var(--surface-2); }
 @keyframes shimmer { to { background-position: -200% 0; } }

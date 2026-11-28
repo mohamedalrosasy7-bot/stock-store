@@ -9,6 +9,19 @@ import { BagIcon, HeartIcon } from './Icons';
 import { hasAvailableVariant } from '../data/variantAvailability';
 import { cloudinaryUrl } from '../config';
 
+const preloadedDetailImages = new Set();
+
+function preloadDetailImage(src) {
+  const imageUrl = cloudinaryUrl(src, 'detail');
+  if (!imageUrl || preloadedDetailImages.has(imageUrl)) return;
+
+  const image = new Image();
+  preloadedDetailImages.add(imageUrl);
+  image.fetchPriority = 'high';
+  image.onload = image.onerror = () => preloadedDetailImages.delete(imageUrl);
+  image.src = imageUrl;
+}
+
 export default function ProductCard({ product }) {
   const { has, toggle } = useWishlist();
   const toast = useToast();
@@ -23,7 +36,7 @@ export default function ProductCard({ product }) {
   return (
     <article className={`card ${noAvailableVariant ? 'is-sold-out' : ''}`}>
       <div className="card-media">
-        <Link to={link} aria-label={product.name}>
+        <Link to={link} aria-label={product.name} onPointerDown={() => preloadDetailImage(gallery[0])}>
           <ProductImage src={cloudinaryUrl(gallery[0] || '', 'card')} alt={product.name} />
           {gallery[1] && (
             <img
@@ -56,10 +69,10 @@ export default function ProductCard({ product }) {
       </div>
 
       <div className="card-body">
-        <Link to={link} className="card-title">{product.name}</Link>
+        <Link to={link} className="card-title" onPointerDown={() => preloadDetailImage(gallery[0])}>{product.name}</Link>
         <Price product={product} />
 
-        <Link className="btn btn-full" to={`${link}#pick`}>
+        <Link className="btn btn-full" to={`${link}#pick`} onPointerDown={() => preloadDetailImage(gallery[0])}>
           <BagIcon size={16} /> {noAvailableVariant ? t('admin.soldOut') : t('product.addToCart')}
         </Link>
       </div>
