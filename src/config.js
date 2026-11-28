@@ -46,7 +46,7 @@ const SIZES = {
 };
 
 // Builds a size-optimized Cloudinary URL without creating another stored image.
-export const cloudinaryUrl = (src, size, { fetchExternal = false } = {}) => {
+export const cloudinaryUrl = (src, size) => {
   if (typeof src !== 'string' || !IMAGES.cloudName) return src;
   const transformation = SIZES[size];
   if (!transformation) throw new Error(`Unknown Cloudinary image size: ${size}`);
@@ -54,9 +54,6 @@ export const cloudinaryUrl = (src, size, { fetchExternal = false } = {}) => {
   const base = `https://res.cloudinary.com/${IMAGES.cloudName}/image/upload/`;
   if (src.startsWith(base) && src.includes(marker)) {
     return src.replace(marker, `/upload/${transformation}/`);
-  }
-  if (fetchExternal && /^https:\/\//i.test(src)) {
-    return `https://res.cloudinary.com/${IMAGES.cloudName}/image/fetch/${transformation}/${encodeURIComponent(src)}`;
   }
   return src;
 };

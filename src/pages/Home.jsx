@@ -28,7 +28,7 @@ export default function Home() {
   // createdAt, newest first); the "View all" arrow link leads to the rest.
   const newArrivals = sortByNewest(visible).slice(0, 6);
   const onSale = sortByNewest(visible.filter((p) => p.salePrice != null));
-  const heroSrc = cloudinaryUrl(heroImage || IMAGES.hero, 'hero', { fetchExternal: true });
+  const heroSrc = cloudinaryUrl(heroImage || IMAGES.hero, 'hero');
   const offerCopy = offerContent?.ar || offerContent?.en || {};
   const offerTitle = offerCopy.title ?? t('home.offerTitle');
   const reviews = t('reviews');
