@@ -89,7 +89,7 @@ function AppShell() {
     const t = setTimeout(() => {
       try { sessionStorage.setItem('mv-booted', '1'); } catch { /* ignore */ }
       setBooting(false);
-    }, 1200);
+    }, 300);
     return () => clearTimeout(t);
   }, [booting]);
 

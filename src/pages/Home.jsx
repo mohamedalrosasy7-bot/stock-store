@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { IMAGES, getCategoryName, sortByNewest } from '../data/products';
-import { STORE } from '../config';
+import { cloudinaryUrl, STORE } from '../config';
 import { useAdmin } from '../context/AdminContext';
 import { useLang } from '../context/LangContext';
 import { useSEO } from '../hooks/useSEO';
@@ -28,7 +28,7 @@ export default function Home() {
   // createdAt, newest first); the "View all" arrow link leads to the rest.
   const newArrivals = sortByNewest(visible).slice(0, 6);
   const onSale = sortByNewest(visible.filter((p) => p.salePrice != null));
-  const heroSrc = heroImage || IMAGES.hero;
+  const heroSrc = cloudinaryUrl(heroImage || IMAGES.hero, 'hero', { fetchExternal: true });
   const offerCopy = offerContent?.ar || offerContent?.en || {};
   const offerTitle = offerCopy.title ?? t('home.offerTitle');
   const reviews = t('reviews');

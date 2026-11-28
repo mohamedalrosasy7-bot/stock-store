@@ -42,17 +42,23 @@ const SIZES = {
   card: 'f_auto,q_auto,w_500,c_limit',
   detail: 'f_auto,q_auto,w_800,c_limit',
   thumb: 'f_auto,q_auto,w_200,c_limit',
+  hero: 'f_auto,q_auto,w_1000,c_limit',
 };
 
 // Builds a size-optimized Cloudinary URL without creating another stored image.
-export const cloudinaryUrl = (src, size) => {
+export const cloudinaryUrl = (src, size, { fetchExternal = false } = {}) => {
   if (typeof src !== 'string' || !IMAGES.cloudName) return src;
   const transformation = SIZES[size];
   if (!transformation) throw new Error(`Unknown Cloudinary image size: ${size}`);
   const marker = `/upload/`;
   const base = `https://res.cloudinary.com/${IMAGES.cloudName}/image/upload/`;
-  if (!src.startsWith(base) || !src.includes(marker)) return src;
-  return src.replace(marker, `/upload/${transformation}/`);
+  if (src.startsWith(base) && src.includes(marker)) {
+    return src.replace(marker, `/upload/${transformation}/`);
+  }
+  if (fetchExternal && /^https:\/\//i.test(src)) {
+    return `https://res.cloudinary.com/${IMAGES.cloudName}/image/fetch/${transformation}/${encodeURIComponent(src)}`;
+  }
+  return src;
 };
 
 
