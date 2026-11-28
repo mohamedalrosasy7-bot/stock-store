@@ -391,6 +391,13 @@ p { margin: 0 0 1rem; }
 @keyframes toastBar { to { transform: scaleX(1); } }
 
 /* Loaders & transitions */
+.splash { position: fixed; inset: 0; z-index: 200; display: grid; place-items: center; background: #111; color: #faf8f5; animation: splashOut 0.5s ease 0.8s forwards; }
+.splash-inner { display: flex; flex-direction: column; align-items: center; gap: 1.2rem; }
+.splash-logo { font-family: var(--serif); font-size: clamp(1.8rem, 6vw, 3rem); letter-spacing: 0.35em; padding-left: 0.35em; animation: fadeUp 0.8s var(--ease) both; }
+.splash-bar { width: 140px; height: 1px; background: rgba(255, 255, 255, 0.2); position: relative; overflow: hidden; }
+.splash-bar::after { content: ''; position: absolute; inset: 0; background: var(--beige); transform: translateX(-100%); animation: load 1s var(--ease) forwards; }
+@keyframes load { to { transform: none; } }
+@keyframes splashOut { to { opacity: 0; visibility: hidden; } }
 .page { animation: pageIn 0.55s var(--ease) both; }
 @keyframes pageIn { from { opacity: 0; transform: translateY(14px); } }
 .page-loader { min-height: 60vh; display: grid; place-items: center; }

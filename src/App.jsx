@@ -1,11 +1,10 @@
-import { lazy, Suspense, useEffect, useLayoutEffect, useRef } from 'react';
+import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Outlet, Route, Routes, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import WhatsAppButton from './components/WhatsAppButton';
-import { PageLoader } from './components/Loaders';
+import { PageLoader, SplashLoader } from './components/Loaders';
 import { useAdmin } from './context/AdminContext';
-import Home from './pages/Home';
 import AdminLayout from './components/AdminLayout';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
@@ -15,6 +14,7 @@ import AdminAds from './pages/AdminAds';
 import AdminCategories from './pages/AdminCategories';
 import AdminOrders from './pages/AdminOrders';
 
+const Home = lazy(() => import('./pages/Home'));
 const Shop = lazy(() => import('./pages/Shop'));
 const ProductDetails = lazy(() => import('./pages/ProductDetails'));
 const Cart = lazy(() => import('./pages/Cart'));
@@ -75,12 +75,27 @@ function ScrollToTop() {
   return null;
 }
 
+const alreadyBooted = () => {
+  try { return sessionStorage.getItem('mv-booted') === '1'; } catch { return false; }
+};
+
 function AppShell() {
   const location = useLocation();
+  const [booting, setBooting] = useState(() => !alreadyBooted());
   const isAdmin = location.pathname.startsWith('/admin');
+
+  useEffect(() => {
+    if (!booting) return undefined;
+    const t = setTimeout(() => {
+      try { sessionStorage.setItem('mv-booted', '1'); } catch { /* ignore */ }
+      setBooting(false);
+    }, 300);
+    return () => clearTimeout(t);
+  }, [booting]);
 
   return (
     <>
+      {booting && <SplashLoader />}
       <ScrollToTop />
       {!isAdmin && <Navbar />}
       <main>
