@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { STORE, money } from '../config';
+import { STORE, cloudinaryUrl, money } from '../config';
 import { colorImage } from '../data/products';
 import { useAdmin } from '../context/AdminContext';
 import { useCart } from '../context/CartContext';
@@ -50,7 +50,7 @@ export default function Cart() {
           {lines.map((l) => (
             <div key={l.key} className="cart-line">
               <Link to={`/product/${l.product.id}`} className="cart-img">
-                <ProductImage src={lineImage(l)} alt={l.product.name} />
+                <ProductImage src={cloudinaryUrl(lineImage(l), 'thumb')} alt={l.product.name} />
               </Link>
               <div className="cart-info">
                 <Link to={`/product/${l.product.id}`} className="card-title">{l.product.name}</Link>

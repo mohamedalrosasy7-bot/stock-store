@@ -38,16 +38,21 @@ export const IMAGES = {
   folder: 'stock-store',
 };
 
-// Builds a Cloudinary delivery URL that resizes on the fly (used for cards and
-// thumbnails so the storefront never downloads the full-size original).
-export const cloudinaryUrl = (src, { width = 700, height } = {}) => {
+const SIZES = {
+  card: 'f_auto,q_auto,w_500,c_limit',
+  detail: 'f_auto,q_auto,w_800,c_limit',
+  thumb: 'f_auto,q_auto,w_200,c_limit',
+};
+
+// Builds a size-optimized Cloudinary URL without creating another stored image.
+export const cloudinaryUrl = (src, size) => {
   if (typeof src !== 'string' || !IMAGES.cloudName) return src;
+  const transformation = SIZES[size];
+  if (!transformation) throw new Error(`Unknown Cloudinary image size: ${size}`);
   const marker = `/upload/`;
   const base = `https://res.cloudinary.com/${IMAGES.cloudName}/image/upload/`;
   if (!src.startsWith(base) || !src.includes(marker)) return src;
-  const transforms = [`w_${width}`, 'c_limit', 'q_auto', 'f_auto'];
-  if (height) transforms.push(`h_${height}`, 'c_fill');
-  return src.replace(marker, `/upload/${transforms.join(',')}/`);
+  return src.replace(marker, `/upload/${transformation}/`);
 };
 
 

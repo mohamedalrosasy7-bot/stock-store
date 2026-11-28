@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { STORE, money } from '../config';
+import { STORE, cloudinaryUrl, money } from '../config';
 import { colorImage } from '../data/products';
 import { useAdmin } from '../context/AdminContext';
 import { useCart } from '../context/CartContext';
@@ -219,7 +219,7 @@ export default function Checkout() {
             {lines.map((l) => (
               <li key={l.key}>
                 <div className="summary-img">
-                  <ProductImage src={lineImage(l)} alt={l.product.name} />
+                  <ProductImage src={cloudinaryUrl(lineImage(l), 'thumb')} alt={l.product.name} />
                   <span className="qty-badge">{l.qty}</span>
                 </div>
                 <div>

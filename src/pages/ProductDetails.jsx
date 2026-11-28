@@ -14,6 +14,7 @@ import QtySelect from '../components/QtySelect';
 import { BagIcon, CashIcon, HeartIcon, ReturnIcon, TrashIcon, TruckIcon } from '../components/Icons';
 import NotFound from './NotFound';
 import { getColorAvailability, isVariantAvailable } from '../data/variantAvailability';
+import { cloudinaryUrl } from '../config';
 
 export default function ProductDetails() {
   const { id } = useParams();
@@ -235,7 +236,7 @@ function Details({ product, categories }) {
                 onClick={() => selectImage(i)}
                 aria-label={t('product.viewImage', { index: i + 1 })}
               >
-                <ProductImage src={src} alt={`${product.name} view ${i + 1}`} />
+                <ProductImage src={cloudinaryUrl(src, 'thumb')} alt={`${product.name} view ${i + 1}`} />
                 {thumbSoldOut && <span className="badge badge-sold-out">{t('admin.soldOut')}</span>}
               </button>
                 );
@@ -249,7 +250,7 @@ function Details({ product, categories }) {
             onTouchCancel={() => { touchStartX.current = null; }}
           >
             {activeImages.length ? (
-              <ProductImage src={activeImages[img % activeImages.length]} alt={`${product.name} - ${selectedVariant?.color || ''}`} loading="eager" />
+              <ProductImage src={cloudinaryUrl(activeImages[img % activeImages.length], 'detail')} alt={`${product.name} - ${selectedVariant?.color || ''}`} loading="eager" />
             ) : (
               <ProductImage src="" alt={product.name} loading="eager" />
             )}
