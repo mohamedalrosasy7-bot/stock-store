@@ -9,7 +9,7 @@ import { money } from '../config';
 import { CloseIcon, ArrowIcon } from '../components/Icons';
 
 const LETTER_SIZE_OPTIONS = ['M', 'L', 'XL', '2XL', '3XL'];
-const NUMBER_SIZE_OPTIONS = ['30', '32', '34', '36', '38', '40'];
+const NUMBER_SIZE_OPTIONS = ['30', '32', '34', '36', '38', '40', '41', '42', '43', '44', '45'];
 const collectSizes = (colors) => {
   const seen = new Set();
   return colors.flatMap((color) => color.sizes || []).filter((size) => {
