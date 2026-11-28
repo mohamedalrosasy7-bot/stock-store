@@ -43,6 +43,7 @@ const SIZES = {
   detail: 'f_auto,q_auto,w_800,c_limit',
   thumb: 'f_auto,q_auto,w_200,c_limit',
   hero: 'f_auto,q_auto,w_1000,c_limit',
+  category: 'f_auto,q_auto,w_500,c_limit',
 };
 
 // Builds a size-optimized Cloudinary URL without creating another stored image.
@@ -56,6 +57,20 @@ export const cloudinaryUrl = (src, size) => {
     return src.replace(marker, `/upload/${transformation}/`);
   }
   return src;
+};
+
+export const categoryImageUrl = (src) => {
+  const cloudinarySrc = cloudinaryUrl(src, 'category');
+  if (cloudinarySrc !== src) return cloudinarySrc;
+  if (typeof src !== 'string' || !src.startsWith('https://images.unsplash.com/')) return src;
+
+  const url = new URL(src);
+  url.searchParams.set('auto', 'format');
+  url.searchParams.set('fit', 'crop');
+  url.searchParams.set('w', '500');
+  url.searchParams.set('h', '625');
+  url.searchParams.set('q', '70');
+  return url.href;
 };
 
 

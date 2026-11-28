@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { IMAGES, getCategoryName, sortByNewest } from '../data/products';
-import { cloudinaryUrl, STORE } from '../config';
+import { categoryImageUrl, cloudinaryUrl, STORE } from '../config';
 import { useAdmin } from '../context/AdminContext';
 import { useLang } from '../context/LangContext';
 import { useSEO } from '../hooks/useSEO';
@@ -113,7 +113,15 @@ export default function Home() {
         </div>
         <div className="cat-grid">
           {categories.map((c, index) => (
-            <Link key={c.id} to={`/shop?category=${c.id}`} className="cat-tile" style={{ '--img': `url("${c.image || IMAGES.categories[c.id] || IMAGES.banner}")` }}>
+            <Link key={c.id} to={`/shop?category=${c.id}`} className="cat-tile">
+              <img
+                className="cat-tile-image"
+                src={categoryImageUrl(c.image || IMAGES.categories[c.id] || IMAGES.banner)}
+                alt=""
+                aria-hidden="true"
+                loading="lazy"
+                decoding="async"
+              />
               <span className="cat-tile-top">
                 <span className="cat-tile-index" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
                 <span className="cat-tile-tag" aria-hidden="true">{t('home.collection')}</span>
